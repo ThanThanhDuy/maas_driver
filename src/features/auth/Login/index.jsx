@@ -26,6 +26,8 @@ export const Login = ({ navigation }) => {
 
     // Sign-in the user with the credential
     const user = await auth().signInWithCredential(googleCredential);
+    console.log("idToken:", idToken);
+    // console.log("user", user);
     setUser(user);
     setAccessToken(idToken);
   }
