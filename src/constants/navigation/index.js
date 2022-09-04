@@ -9,31 +9,27 @@ const fontFamilyInActive = "Roboto_400";
 const fontSizeIcon = 24;
 const fontSizeLabel = 12;
 
+import { Home } from "../../features";
+
 const getNavigation = () => {
   let listNav = [
     {
       nameNavigation: "Home",
       nameIcom: "home",
       nameLabel: "Home",
-      component: null,
+      component: Home,
     },
     {
-      nameNavigation: "Promotion",
-      nameIcom: "gift",
-      nameLabel: "Promotion",
-      component: null,
-    },
-    {
-      nameNavigation: "Order",
-      nameIcom: "reader",
-      nameLabel: "Order",
-      component: null,
+      nameNavigation: "Income",
+      nameIcom: "wallet",
+      nameLabel: "Income",
+      component: Home,
     },
     {
       nameNavigation: "MailBox",
       nameIcom: "chatbox",
       nameLabel: "MailBox",
-      component: null,
+      component: Home,
     },
   ];
   let listNavBottom = [];
