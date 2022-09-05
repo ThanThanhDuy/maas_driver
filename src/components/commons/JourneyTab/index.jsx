@@ -6,7 +6,7 @@ import moment from "moment";
 import numberWithCommas from "../../../utils/numberWithCommas";
 import { styles } from "./style";
 
-export const JourneyTab = ({ item }) => {
+export const JourneyTab = ({ item, index }) => {
   return (
     <View style={{ marginTop: 10 }}>
       <View style={styles.container}>

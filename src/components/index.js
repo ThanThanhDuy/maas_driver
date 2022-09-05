@@ -5,5 +5,15 @@ import { TabBarLabel } from "./commons/TabBarLabel";
 import { Avatar } from "./commons/Avatar";
 import { Chart } from "./commons/chart";
 import { JourneyTab } from "./commons/JourneyTab";
+import { HeaderBack } from "./commons/HeaderBack";
 
-export { Button, Title, TabBarIcon, TabBarLabel, Avatar, Chart, JourneyTab };
+export {
+  Button,
+  Title,
+  TabBarIcon,
+  TabBarLabel,
+  Avatar,
+  Chart,
+  JourneyTab,
+  HeaderBack,
+};
