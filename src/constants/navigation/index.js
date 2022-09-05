@@ -9,7 +9,7 @@ const fontFamilyInActive = "Roboto_400";
 const fontSizeIcon = 24;
 const fontSizeLabel = 12;
 
-import { Home } from "../../features";
+import { Home, Income } from "../../features";
 
 const getNavigation = () => {
   let listNav = [
@@ -23,7 +23,7 @@ const getNavigation = () => {
       nameNavigation: "Income",
       nameIcom: "wallet",
       nameLabel: "Income",
-      component: Home,
+      component: Income,
     },
     {
       nameNavigation: "MailBox",
