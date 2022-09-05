@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { WelCome } from "../features";
 import { NotAuth } from "./not_auth";
 import { Auth } from "./auth";
+import { ChatDetail } from "../features/mailBox/ChatDetail";
 
 const Root = createNativeStackNavigator();
 
@@ -31,6 +32,7 @@ function NavigatorRoot() {
           component={Auth}
           options={{ gestureEnabled: false }}
         ></Root.Screen>
+        <Root.Screen name="ChatDetail" component={ChatDetail}></Root.Screen>
       </Root.Navigator>
     </NavigationContainer>
   );

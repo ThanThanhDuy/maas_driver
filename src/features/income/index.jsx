@@ -94,7 +94,7 @@ export const Income = () => {
         <View>
           <Text style={styles.wrappComplete}>54 journey completed</Text>
           {_history.map((item, index) => (
-            <JourneyTab item={item} />
+            <JourneyTab item={item} key={index} />
           ))}
         </View>
       </ScrollView>
