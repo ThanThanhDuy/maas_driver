@@ -6,7 +6,11 @@ export const Avatar = props => {
   return (
     <View style={styles.container}>
       <View style={styles.wrapperImage}>
-        <Image resizeMode="cover" style={styles.image} {...props} />
+        <Image
+          resizeMode="cover"
+          style={[styles.image, props?.style]}
+          {...props}
+        />
       </View>
     </View>
   );

@@ -1,7 +1,7 @@
 import * as React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { WelCome } from "../features";
+import { Profile, WelCome } from "../features";
 import { NotAuth } from "./not_auth";
 import { Auth } from "./auth";
 import { ChatDetail } from "../features/mailBox/ChatDetail";
@@ -33,6 +33,7 @@ function NavigatorRoot() {
           options={{ gestureEnabled: false }}
         ></Root.Screen>
         <Root.Screen name="ChatDetail" component={ChatDetail}></Root.Screen>
+        <Root.Screen name="Profile" component={Profile}></Root.Screen>
       </Root.Navigator>
     </NavigationContainer>
   );
