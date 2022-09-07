@@ -5,7 +5,6 @@ class DriverService {
     const params = {
       IdToken: idToken,
     };
-
     try {
       var response = await driverApi.login(params);
     } catch (error) {

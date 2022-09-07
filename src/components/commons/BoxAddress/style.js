@@ -1,5 +1,6 @@
 import { StyleSheet } from "react-native";
 import { appTheme, colors, fontSize } from "../../../constants";
+
 function createStyle(styleBox) {
   const styles = StyleSheet.create({
     container: {
