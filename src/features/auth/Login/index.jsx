@@ -1,12 +1,21 @@
-import React, { useEffect, useState } from "react";
-import { View, Image, Text, SafeAreaView } from "react-native";
+import React, { useState } from "react";
+import {
+  View,
+  Image,
+  Text,
+  SafeAreaView,
+  ActivityIndicator,
+  Alert,
+} from "react-native";
 import { AntDesign } from "@expo/vector-icons";
 import auth from "@react-native-firebase/auth";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { IMAGES, LOGO } from "../../../assets";
 import { Title, Button } from "../../../components/index";
 import { appTheme } from "../../../constants";
 import { styles } from "./styles";
+import driverService from "../../../services/driver";
 
 GoogleSignin.configure({
   webClientId:
@@ -14,66 +23,87 @@ GoogleSignin.configure({
 });
 
 export const Login = ({ navigation }) => {
-  const [user, setUser] = useState();
-  const [accessToken, setAccessToken] = useState();
+  const [_user, _setUser] = useState();
+  const [_loading, _setLoading] = useState(false);
+  const [_accessToken, _setAccessToken] = useState();
 
   async function onGoogleButtonPress() {
-    // Get the users ID token
     const { idToken } = await GoogleSignin.signIn();
-
-    // Create a Google credential with the token
+    _setLoading(true);
     const googleCredential = auth.GoogleAuthProvider.credential(idToken);
+    const userGoogle = await auth().signInWithCredential(googleCredential);
 
-    // Sign-in the user with the credential
-    const user = await auth().signInWithCredential(googleCredential);
-    console.log("idToken:", idToken);
-    // console.log("user", user);
-    setUser(user);
-    setAccessToken(idToken);
+    const accessTokenFirebase = await userGoogle.user.getIdToken();
+    const res = await driverService.login(accessTokenFirebase);
+
+    if (res && res?.StatusCode === 200) {
+      await AsyncStorage.setItem(
+        "AccessToken",
+        JSON.stringify(res?.Data.AccessToken)
+      );
+      await AsyncStorage.setItem("User", JSON.stringify(res?.Data.User));
+      navigation.navigate("Auth");
+    } else {
+      Alert.alert("Error", res?.Message);
+    }
+    _setLoading(false);
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View>
-        <Image
-          style={{
-            width: 100,
-            height: 100,
-          }}
-          source={LOGO.miniLogo}
-        />
-      </View>
-      <View style={styles.wrapperBanner}>
-        <Image style={styles.banner} source={IMAGES.banner} />
-      </View>
-      <View
-        style={{
-          paddingLeft: 10,
-        }}
-      >
+    <>
+      <SafeAreaView style={[styles.container, _loading && { opacity: 0.7 }]}>
+        <View>
+          <Image
+            style={{
+              width: 100,
+              height: 100,
+            }}
+            source={LOGO.miniLogo}
+          />
+        </View>
+        <View style={styles.wrapperBanner}>
+          <Image style={styles.banner} source={IMAGES.banner} />
+        </View>
         <View
           style={{
-            marginTop: 50,
-            marginBottom: 30,
+            paddingLeft: 10,
           }}
         >
-          <Title
-            level={"h2"}
-            title="Welcome to ViGo Driver!"
-            style={{ marginLeft: 10 }}
+          <View
+            style={{
+              marginTop: 50,
+              marginBottom: 30,
+            }}
+          >
+            <Title
+              level={"h2"}
+              title="Welcome to ViGo Driver!"
+              style={{ marginLeft: 10 }}
+            />
+            <Text style={{ marginLeft: 10 }}>
+              Log in to your account and start receiving rides
+            </Text>
+          </View>
+          <Button
+            iconFront={<AntDesign name="google" size={24} color="white" />}
+            title="Login with Google"
+            width={appTheme.WIDTH * 0.9}
+            onPress={onGoogleButtonPress}
+            marginBottom={60}
           />
-          <Text style={{ marginLeft: 10 }}>
-            Log in to your account and start receiving rides
-          </Text>
         </View>
-        <Button
-          iconFront={<AntDesign name="google" size={24} color="white" />}
-          title="Login with Google"
-          width={appTheme.WIDTH * 0.9}
-          onPress={onGoogleButtonPress}
-          marginBottom={60}
+      </SafeAreaView>
+      {_loading && (
+        <ActivityIndicator
+          style={{
+            position: "absolute",
+            top: appTheme.HEIGHT / 2 - 5,
+            left: appTheme.WIDTH / 2 - 10,
+          }}
+          size="large"
+          color="#000"
         />
-      </View>
-    </SafeAreaView>
+      )}
+    </>
   );
 };

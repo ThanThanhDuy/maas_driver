@@ -15,7 +15,7 @@ function NavigatorRoot() {
         screenOptions={{
           headerShown: false,
         }}
-        initialRouteName="Auth"
+        initialRouteName="WelCome"
       >
         <Root.Screen
           name="WelCome"

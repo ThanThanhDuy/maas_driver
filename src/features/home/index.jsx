@@ -9,10 +9,11 @@ import {
 import React, { useState } from "react";
 import MapView from "react-native-maps";
 import { Octicons, Ionicons } from "@expo/vector-icons";
-import { Avatar } from "../../components";
+import { Avatar, BoxAddress } from "../../components";
 import { IMAGES } from "../../assets/index";
-import { colors } from "../../constants";
+import { appTheme, colors, fontSize } from "../../constants";
 import createStyle from "./style";
+import numberWithCommas from "../../utils/numberWithCommas";
 
 export const Home = () => {
   const styles = createStyle();
@@ -85,6 +86,22 @@ export const Home = () => {
           </View>
         )}
       </SafeAreaView>
+      <View style={styles.wrappJourney}>
+        <View>
+          <BoxAddress
+            styleBox={styles.boxAddress}
+            from="17 Duong D5A, Phuoc Long B5A, Phuoc Long B"
+            to="Dai hoc FPT Ho Chi Minh Campus quan 9 thanh pho ho chi minh"
+          />
+        </View>
+        <View style={{ alignItems: "flex-end", justifyContent: "center" }}>
+          <Text style={styles.textWallet}>Account wallet</Text>
+          <View style={{ flexDirection: "row" }}>
+            <Text style={styles.textMoney}>{numberWithCommas(247183)}</Text>
+            <Text style={styles.vnd}>VND</Text>
+          </View>
+        </View>
+      </View>
     </View>
   );
 };
