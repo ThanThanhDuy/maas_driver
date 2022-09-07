@@ -6,6 +6,7 @@ import { Avatar } from "./commons/Avatar";
 import { Chart } from "./commons/chart";
 import { JourneyTab } from "./commons/JourneyTab";
 import { HeaderBack } from "./commons/HeaderBack";
+import { BoxAddress } from "./commons/BoxAddress";
 
 export {
   Button,
@@ -16,4 +17,5 @@ export {
   Chart,
   JourneyTab,
   HeaderBack,
+  BoxAddress,
 };
