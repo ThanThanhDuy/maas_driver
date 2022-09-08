@@ -4,9 +4,16 @@ import { Title } from "../Title";
 import { ArrowButton } from "../ArrowButton";
 import { styles } from "./style";
 import { Avatar } from "../Avatar";
+import { colors } from "../../../constants";
 
 export const HeaderBack = props => {
-  const { title = "", navigation, avatar = null } = props;
+  const {
+    title = "",
+    navigation,
+    avatar = null,
+    style = {},
+    iconColor = colors.text,
+  } = props;
   return (
     <View style={styles.container}>
       <ArrowButton
@@ -14,6 +21,7 @@ export const HeaderBack = props => {
           navigation.goBack();
         }}
         size={28}
+        color={iconColor}
       />
       {avatar && (
         <Avatar
@@ -22,9 +30,12 @@ export const HeaderBack = props => {
         />
       )}
       <Title
-        style={{
-          marginLeft: avatar ? 10 : 10,
-        }}
+        style={[
+          {
+            marginLeft: avatar ? 10 : 10,
+          },
+          style,
+        ]}
         level={avatar ? "h4" : "h3"}
         title={title}
       />

@@ -15,7 +15,7 @@ import { appTheme, colors, fontSize } from "../../constants";
 import createStyle from "./style";
 import numberWithCommas from "../../utils/numberWithCommas";
 
-export const Home = () => {
+export const Home = ({ navigation }) => {
   const styles = createStyle();
 
   const [region, setRegion] = useState({
@@ -49,7 +49,12 @@ export const Home = () => {
       />
       <SafeAreaView style={{ flex: _isLoading ? 1 : 0 }}>
         <View style={styles.container}>
-          <Avatar source={IMAGES.banner} style={styles.avatar} />
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate("Profile")}
+          >
+            <Avatar source={IMAGES.banner} style={styles.avatar} />
+          </TouchableOpacity>
           <View style={styles.wrapperContent}>
             <Text style={styles.text}>
               {_isWorking ? "Working" : "Not working"}
