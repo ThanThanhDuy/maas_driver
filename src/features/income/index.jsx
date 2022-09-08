@@ -31,7 +31,7 @@ const _history = [
   },
 ];
 
-export const Income = () => {
+export const Income = ({ navigation }) => {
   const styles = createStyle();
 
   return (
@@ -94,7 +94,7 @@ export const Income = () => {
         <View>
           <Text style={styles.wrappComplete}>54 journey completed</Text>
           {_history.map((item, index) => (
-            <JourneyTab item={item} key={index} />
+            <JourneyTab item={item} key={index} navigation={navigation} />
           ))}
         </View>
       </ScrollView>
