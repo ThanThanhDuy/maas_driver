@@ -1,4 +1,4 @@
-import { View, Text } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
 import React from "react";
 import { AntDesign } from "@expo/vector-icons";
 import { colors, fontSize } from "../../../constants";
@@ -6,9 +6,13 @@ import moment from "moment";
 import numberWithCommas from "../../../utils/numberWithCommas";
 import { styles } from "./style";
 
-export const JourneyTab = ({ item, index }) => {
+export const JourneyTab = ({ item, index, navigation }) => {
   return (
-    <View style={{ marginTop: 10 }}>
+    <TouchableOpacity
+      style={{ marginTop: 10 }}
+      activeOpacity={0.7}
+      onPress={() => navigation.navigate("History")}
+    >
       <View style={styles.container}>
         <Text style={styles.day}>
           {item.day},{" "}
@@ -29,6 +33,6 @@ export const JourneyTab = ({ item, index }) => {
         </Text>
       </View>
       <View style={{ height: 5, backgroundColor: "#ccc" }}></View>
-    </View>
+    </TouchableOpacity>
   );
 };
