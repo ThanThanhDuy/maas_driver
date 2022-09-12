@@ -1,3 +1,4 @@
+import "react-native-gesture-handler";
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet, Text, View } from "react-native";
 import {
@@ -9,6 +10,7 @@ import {
   Roboto_700Bold,
   Roboto_900Black,
 } from "@expo-google-fonts/roboto";
+import { RecoilRoot } from "recoil";
 import NavigatorRoot from "./src/navigation";
 
 export default function App() {
@@ -28,10 +30,12 @@ export default function App() {
     );
   } else {
     return (
-      <View style={styles.container}>
-        <NavigatorRoot />
-        <StatusBar style="auto" />
-      </View>
+      <RecoilRoot>
+        <View style={styles.container}>
+          <NavigatorRoot />
+          <StatusBar style="auto" />
+        </View>
+      </RecoilRoot>
     );
   }
 }
