@@ -1,0 +1,162 @@
+import { View, Text, TouchableOpacity } from "react-native";
+import RNPickerSelect from "react-native-picker-select";
+import DatePicker from "react-native-date-picker";
+import moment from "moment";
+import { Entypo } from "@expo/vector-icons";
+import React, { useState } from "react";
+import createStyle from "./style";
+import { colors } from "../../../constants/index";
+
+const Dropdown = props => {
+  const {
+    height = 50,
+    width = 160,
+    borderRadius = 16,
+    isShadown = true,
+    fontSizeSelect = "medium",
+    fontSizeLabel = "tiny",
+    colorLabel = colors.primary,
+    label = null,
+    IconFront = null,
+    items = null,
+    placeholder = null,
+    onValueChange = () => {},
+    onDoneValue = () => {},
+    mode = "normal",
+    styleBox = {},
+    minimumDate = new Date(),
+    date = new Date(),
+  } = props;
+
+  const [_date, _setDate] = useState(new Date());
+  const [_open, _setOpen] = useState(false);
+  const [_itemSelected, _setItemSelected] = useState(
+    items ? items[0].value : ""
+  );
+
+  const styles = createStyle(
+    height,
+    width,
+    borderRadius,
+    fontSizeSelect,
+    fontSizeLabel,
+    colorLabel,
+    label,
+    IconFront,
+    mode
+  );
+
+  const handleOnValueChange = value => {
+    onValueChange(value);
+    _setItemSelected(value);
+  };
+
+  const handleDoneValueChange = () => {
+    onDoneValue(_itemSelected);
+  };
+
+  const handleDoneValueChangeDate = date => {
+    onDoneValue(date);
+  };
+
+  return (
+    <TouchableOpacity onPress={() => _setOpen(true)}>
+      <View style={{ ...styles.containerWithShadown, ...styleBox }}>
+        {IconFront}
+        <View>
+          {label && <Text style={styles.label}>{label}</Text>}
+          {mode === "normal" && (
+            <>
+              <RNPickerSelect
+                placeholder={
+                  items
+                    ? placeholder
+                      ? {
+                          label: placeholder,
+                          value: null,
+                          color: "#9EA0A4",
+                        }
+                      : {}
+                    : {
+                        label: "Select a item",
+                        value: null,
+                        color: "#9EA0A4",
+                      }
+                }
+                onValueChange={handleOnValueChange}
+                onDonePress={handleDoneValueChange}
+                items={items ? items : []}
+                useNativeAndroidPickerStyle={false}
+                style={styles}
+                Icon={() => (
+                  <Entypo
+                    style={styles.icon}
+                    name="chevron-down"
+                    size={24}
+                    color={colors.text}
+                  />
+                )}
+              />
+            </>
+          )}
+          {mode === "time" && (
+            <>
+              <Text style={styles.textTime}>
+                {moment(date).format("hh:mm A")}
+              </Text>
+              <DatePicker
+                modal={true}
+                open={_open}
+                date={date}
+                mode="time"
+                onConfirm={date => {
+                  _setOpen(false);
+                  _setDate(date);
+                  handleDoneValueChangeDate(date);
+                }}
+                onCancel={() => {
+                  _setOpen(false);
+                }}
+              />
+            </>
+          )}
+          {/* select date */}
+          {mode === "date" && (
+            <>
+              <Text style={styles.textTime}>
+                {moment(date).format("MM/DD/YYYY")}
+              </Text>
+              <DatePicker
+                modal={true}
+                open={_open}
+                date={date}
+                mode="date"
+                onConfirm={date => {
+                  _setOpen(false);
+                  _setDate(date);
+                  handleDoneValueChangeDate(date);
+                }}
+                onCancel={() => {
+                  _setOpen(false);
+                }}
+                minimumDate={minimumDate}
+              />
+            </>
+          )}
+        </View>
+        {(mode === "time" || mode === "date") && (
+          <>
+            <Entypo
+              style={styles.iconSelectTime}
+              name="chevron-down"
+              size={24}
+              color={colors.text}
+            />
+          </>
+        )}
+      </View>
+    </TouchableOpacity>
+  );
+};
+
+export default Dropdown;

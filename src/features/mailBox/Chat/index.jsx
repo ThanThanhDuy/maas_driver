@@ -6,49 +6,43 @@ import { IMAGES } from "../../../assets";
 import { appTheme, colors } from "../../../constants";
 import { styles } from "./style";
 
-const _listChat = [
-  {
-    avatar: IMAGES.banner,
-    nameDriver: "Than Thanh Duy",
-    lastedText: "jkahsdkfjahsdklfjhalksdjfhalksjdhfakljsdhfalkjsdhf",
-    lastedTime: "2022-08-21T17:33:22.791Z",
-    isRead: false,
-  },
-  {
-    avatar: IMAGES.banner,
-    nameDriver: "Nguyen Van A",
-    lastedText: "jkahsdkfjahsdklfjhalksdjfhalksjdhfakljsdhfalkjsdhf",
-    lastedTime: "2022-08-20T12:33:22.791Z",
-    isRead: true,
-  },
-];
-
-export const Chat = ({ navigation }) => {
+export const Chat = ({ navigation, _listChat, _handleSelectChatBox }) => {
+  const handleSelectMessage = index => {
+    _handleSelectChatBox(index);
+  };
   return (
     <View style={{ marginLeft: 10, marginTop: 30, marginRight: 10 }}>
       <View>
         {/* item */}
-        {_listChat.map((item, index) => (
+        {_listChat?.map((item, index) => (
           <View key={index}>
             <TouchableOpacity
-              onPress={() => navigation.navigate("ChatDetail")}
+              onPress={() => {
+                navigation.navigate("ChatDetail");
+                handleSelectMessage(index);
+              }}
               activeOpacity={0.7}
               style={{
                 marginHorizontal: 10,
                 borderRadius: 10,
                 paddingVertical: 7,
-                paddingHorizontal: 10,
+                paddingRight: 10,
                 flexDirection: "row",
                 alignItems: "center",
                 marginTop: index !== 0 ? 11 : 0,
               }}
             >
               <Avatar
-                source={item.avatar}
-                style={{ width: 50, height: 50, borderRadius: 100 }}
+                source={{ uri: item.avatar }}
+                style={{
+                  width: 50,
+                  height: 50,
+                  borderRadius: 100,
+                  marginRight: 10,
+                }}
               />
               <View style={{ width: appTheme.WIDTH - 135 }}>
-                <Text style={styles.nameDriver}>{item.nameDriver}</Text>
+                <Text style={styles.nameDriver}>{item.nameBooker}</Text>
                 <View
                   style={{
                     flexDirection: "row",

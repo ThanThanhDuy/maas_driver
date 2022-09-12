@@ -8,44 +8,59 @@ import {
   ScrollView,
   TouchableOpacity,
 } from "react-native";
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { Ionicons } from "@expo/vector-icons";
+import { useRecoilValue, useSetRecoilState } from "recoil";
 import { HeaderBack } from "../../../components";
 import { IMAGES } from "../../../assets";
 import { colors } from "../../../constants";
 import { Message } from "./Message";
 import { styles } from "./style";
-
-const _listChat = [
-  {
-    userId: 1234,
-    message: "Hello",
-    isDriver: true,
-    time: "2022-08-20T12:33:22.791Z",
-  },
-  {
-    userId: 1234,
-    message: "Please waiting few minute",
-    isDriver: true,
-    time: "2022-08-20T12:34:22.791Z",
-  },
-  {
-    userId: 457,
-    message: "OK",
-    isDriver: false,
-    time: "2022-08-20T12:35:22.791Z",
-  },
-  {
-    userId: 1234,
-    message: "Hurry up!",
-    isDriver: false,
-    time: "2022-08-20T12:35:22.791Z",
-  },
-];
+import messageService from "../../../services/message";
+import { indexMessageState, messageState } from "../../../store";
+import messageRoomsService from "../../../services/messageRoom";
 
 export const ChatDetail = ({ navigation }) => {
   const scrollViewRef = useRef();
   const [_textInput, _setTextInput] = useState("");
+  const [_listChat, _setListChat] = useState([]);
+  const [_connection, _setConnection] = useState();
+  const messageValue = useRecoilValue(messageState);
+  const indexMessage = useRecoilValue(indexMessageState);
+  const setMessageValue = useSetRecoilState(messageState);
+
+  const handleRenderMessage = messageValue => {
+    let listMessage = [];
+    let userCodeDriver;
+    for (const item of messageValue.Users) {
+      if (item.RoleName === "DRIVER") {
+        userCodeDriver = item.Code;
+      }
+    }
+    for (const item of messageValue.Messages) {
+      listMessage.push({
+        userCode: item.UserCode,
+        message: item.Content,
+        isDriver: item.UserCode === userCodeDriver ? true : false,
+        time: item.CreateAt,
+      });
+    }
+    _setListChat(listMessage);
+  };
+
+  useEffect(() => {
+    handleRenderMessage(messageValue);
+  }, [messageValue]);
+
+  const sendMessage = async message => {
+    let RoomCode = messageValue.Code;
+    const res = await messageService.sendMessage(RoomCode, message);
+    const response = await messageRoomsService.getAllMessageRooms();
+    if (response && response.StatusCode === 200) {
+      setMessageValue(response?.Data[indexMessage]);
+      _setTextInput("");
+    }
+  };
 
   return (
     <SafeAreaView
@@ -102,8 +117,7 @@ export const ChatDetail = ({ navigation }) => {
                 style={{ marginLeft: 10 }}
                 onPress={() => {
                   Keyboard.dismiss();
-                  console.log(_textInput);
-                  _setTextInput("");
+                  sendMessage(_textInput);
                 }}
               >
                 <Ionicons name="ios-send" size={28} color={colors.primary} />

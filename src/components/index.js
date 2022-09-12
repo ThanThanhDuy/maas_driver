@@ -7,6 +7,7 @@ import { Chart } from "./commons/chart";
 import { JourneyTab } from "./commons/JourneyTab";
 import { HeaderBack } from "./commons/HeaderBack";
 import { BoxAddress } from "./commons/BoxAddress";
+import { Dropdown } from "./commons/Dropdown";
 
 export {
   Button,
@@ -18,4 +19,5 @@ export {
   JourneyTab,
   HeaderBack,
   BoxAddress,
+  Dropdown,
 };
