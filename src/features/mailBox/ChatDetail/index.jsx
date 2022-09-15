@@ -5,8 +5,8 @@ import {
   KeyboardAvoidingView,
   TouchableWithoutFeedback,
   Keyboard,
-  ScrollView,
   TouchableOpacity,
+  FlatList,
 } from "react-native";
 import React, { useRef, useState, useEffect } from "react";
 import { Ionicons } from "@expo/vector-icons";
@@ -21,10 +21,11 @@ import { indexMessageState, messageState } from "../../../store";
 import messageRoomsService from "../../../services/messageRoom";
 
 export const ChatDetail = ({ navigation }) => {
-  const scrollViewRef = useRef();
   const [_textInput, _setTextInput] = useState("");
   const [_listChat, _setListChat] = useState([]);
-  const [_connection, _setConnection] = useState();
+  const [_phone, _setPhone] = useState("");
+  const [_avatar, _setAvatar] = useState(null);
+  const [_nameBooker, _setNameBooker] = useState(null);
   const messageValue = useRecoilValue(messageState);
   const indexMessage = useRecoilValue(indexMessageState);
   const setMessageValue = useSetRecoilState(messageState);
@@ -42,23 +43,32 @@ export const ChatDetail = ({ navigation }) => {
         userCode: item.UserCode,
         message: item.Content,
         isDriver: item.UserCode === userCodeDriver ? true : false,
-        time: item.CreateAt,
+        time: item.CreatedAt,
       });
     }
-    _setListChat(listMessage);
+    _setListChat(listMessage.reverse());
   };
 
   useEffect(() => {
     handleRenderMessage(messageValue);
+    for (const user of messageValue.Users) {
+      if (user.RoleName === "BOOKER") {
+        _setAvatar(user.AvatarUrl);
+        _setNameBooker(user.Name);
+        _setPhone(user?.PhoneNumber.replace("+84", "0"));
+      }
+    }
   }, [messageValue]);
 
   const sendMessage = async message => {
-    let RoomCode = messageValue.Code;
-    const res = await messageService.sendMessage(RoomCode, message);
-    const response = await messageRoomsService.getAllMessageRooms();
-    if (response && response.StatusCode === 200) {
-      setMessageValue(response?.Data[indexMessage]);
+    if (message.trim() !== "") {
+      let RoomCode = messageValue.Code;
+      const res = await messageService.sendMessage(RoomCode, message.trim());
       _setTextInput("");
+      const response = await messageRoomsService.getAllMessageRooms();
+      if (response && response.StatusCode === 200) {
+        setMessageValue(response?.Data[indexMessage]);
+      }
     }
   };
 
@@ -71,36 +81,31 @@ export const ChatDetail = ({ navigation }) => {
     >
       <HeaderBack
         navigation={navigation}
-        title="Than Thanh Duy"
-        avatar={IMAGES.banner}
+        title={_nameBooker}
+        avatar={{ uri: _avatar }}
+        phone={_phone}
       />
+      <View
+        style={{
+          height: 0.5,
+          backgroundColor: colors.gray,
+          borderRadius: 100,
+          marginTop: 10,
+        }}
+      ></View>
       <KeyboardAvoidingView behavior="padding" style={styles.container}>
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <>
-            <ScrollView
-              ref={scrollViewRef}
-              onContentSizeChange={() => {
-                scrollViewRef.current.scrollToEnd({ animated: true });
-              }}
+            <FlatList
+              data={_listChat}
+              renderItem={({ item, index }) => (
+                <Message item={item} index={index} />
+              )}
+              keyExtractor={(item, index) => index}
+              inverted={true}
               showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ flexGrow: 1 }}
-              style={{
-                flex: 1,
-                marginBottom: 0,
-              }}
-            >
-              <View style={styles.inner}>
-                <View
-                  style={{
-                    flex: 1,
-                    backgroundColor: "#fff",
-                    justifyContent: "flex-end",
-                  }}
-                >
-                  <Message _listChat={_listChat} />
-                </View>
-              </View>
-            </ScrollView>
+              contentContainerStyle={{ marginHorizontal: 5 }}
+            />
             <View style={styles.boxInput}>
               <TextInput
                 style={styles.input}
