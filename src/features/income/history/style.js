@@ -8,6 +8,7 @@ export const styles = StyleSheet.create({
     marginBottom: 20,
     borderRadius: 10,
     padding: 10,
+    borderColor: colors.gray,
   },
   boxTripHeader: {
     flexDirection: "row",

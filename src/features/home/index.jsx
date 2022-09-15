@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import MapView from "react-native-maps";
 import { Octicons, Ionicons } from "@expo/vector-icons";
 import { Avatar, BoxAddress } from "../../components";
@@ -14,6 +14,12 @@ import { IMAGES } from "../../assets/index";
 import { appTheme, colors, fontSize } from "../../constants";
 import createStyle from "./style";
 import numberWithCommas from "../../utils/numberWithCommas";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRecoilState, useSetRecoilState } from "recoil";
+import { HubConnectionBuilder } from "@microsoft/signalr";
+import { connectionState } from "../../store";
+import messageRoomsService from "../../services/messageRoom";
+import { allMessageState } from "../../store/messageState";
 
 export const Home = ({ navigation }) => {
   const styles = createStyle();
@@ -26,6 +32,7 @@ export const Home = ({ navigation }) => {
   });
   const [_isWorking, _setIsWorking] = useState(false);
   const [_isLoading, _setIsLoading] = useState(false);
+  const _setAllMessage = useSetRecoilState(allMessageState);
 
   const onRegionChange = region => {
     console.log(region);
@@ -39,6 +46,44 @@ export const Home = ({ navigation }) => {
       _setIsLoading(false);
     }, 1000);
   };
+
+  useEffect(() => {
+    const handle = async () => {
+      const localAccessToken = await AsyncStorage.getItem("AccessToken");
+      if (localAccessToken) {
+        const accessToken = JSON.parse(localAccessToken);
+        const newConnection = new HubConnectionBuilder()
+          .withUrl("https://vigo-application.herokuapp.com/hubs", {
+            headers: {
+              "Access-Control-Allow-Origin": "*",
+            },
+            withCredentials: false,
+            accessTokenFactory: () => `${accessToken}`,
+          })
+          .withAutomaticReconnect()
+          .build();
+
+        await newConnection.start();
+        try {
+          await newConnection.invoke("Login");
+
+          newConnection.on("Connected", mess => {
+            console.log("Connected: ", mess);
+          });
+
+          newConnection.on("Message", async mess => {
+            const response = await messageRoomsService.getAllMessageRooms();
+            _setAllMessage(response);
+          });
+        } catch (error) {
+          console.log(error);
+        }
+      } else {
+        console.log("faild access token");
+      }
+    };
+    handle();
+  }, []);
 
   return (
     <View style={{ flex: 1, opacity: _isLoading ? 0.5 : 1 }}>

@@ -1,8 +1,6 @@
-import { View, SafeAreaView } from "react-native";
+import { View, SafeAreaView, ActivityIndicator } from "react-native";
 import React, { useState, useEffect } from "react";
-import { useSetRecoilState } from "recoil";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { HubConnectionBuilder } from "@microsoft/signalr";
+import { useSetRecoilState, useRecoilValue } from "recoil";
 import { colors } from "../../constants";
 import { Title } from "../../components";
 import { ActionBox } from "./ActionsBox";
@@ -10,29 +8,29 @@ import { NoChat } from "./NoChat";
 import { Chat } from "./Chat";
 import messageRoomsService from "../../services/messageRoom";
 import { indexMessageState, messageState } from "../../store";
+import { allMessageState } from "../../store/messageState";
 
 export const MailBox = ({ navigation }) => {
-  const [_isNoChat, _setIsNoChat] = useState(true);
+  const [_isNoChat, _setIsNoChat] = useState(null);
   const [_listChat, _setListChat] = useState([]);
+  const [_isLoading, _setIsLoading] = useState(false);
   const [_listChatAll, _setListChatAll] = useState([]);
-  const [_connection, _setConnection] = useState();
   const _setMessageState = useSetRecoilState(messageState);
   const _seIndexMessageState = useSetRecoilState(indexMessageState);
+  const _indexMessageState = useRecoilValue(indexMessageState);
+  const _allMessage = useRecoilValue(allMessageState);
 
-  const handleMessage = async () => {
-    const response = await messageRoomsService.getAllMessageRooms();
+  const handleMessage = async response => {
     if (response && response.StatusCode === 200) {
       _setIsNoChat(false);
-      _setMessageState(response.Data[0]);
+      _setMessageState(response.Data[_indexMessageState]);
       let listChatRes = response.Data;
       _setListChatAll(response.Data);
-      // console.log(listChatRes);
       let listChat = [];
       for (let i = 0; i < listChatRes.length; i++) {
         const userChat = listChatRes[i].Users;
         let avatar;
         let userNameBooker;
-        // let userCodeBooker;
         for (const user of userChat) {
           if (user.RoleName === "BOOKER") {
             avatar = user.AvatarUrl;
@@ -46,55 +44,31 @@ export const MailBox = ({ navigation }) => {
         listChat.push({
           avatar,
           nameBooker: userNameBooker,
-          lastedText: messages[messages.length - 1].Content,
-          lastedTime: messages[messages.length - 1].CreatedAt,
+          lastedText:
+            messages.length > 0 ? messages[messages.length - 1].Content : "",
+          lastedTime:
+            messages.length > 0 ? messages[messages.length - 1].CreatedAt : "",
           isRead: false,
         });
       }
       _setListChat(listChat);
-      // console.log(listChat);
+      _setIsLoading(false);
+    } else {
+      _setIsNoChat(true);
     }
   };
 
   useEffect(() => {
-    const handle = async () => {
-      const localAccessToken = await AsyncStorage.getItem("AccessToken");
-      if (localAccessToken) {
-        const accessToken = JSON.parse(localAccessToken);
-        const newConnection = new HubConnectionBuilder()
-          .withUrl("https://vigo-application.herokuapp.com/hubs", {
-            headers: {
-              "Access-Control-Allow-Origin": "*",
-            },
-            withCredentials: false,
-            accessTokenFactory: () => `${accessToken}`,
-          })
-          .withAutomaticReconnect()
-          .build();
-
-        _setConnection(newConnection);
-        await newConnection.start();
-        try {
-          newConnection.on("Connected", mess => {
-            console.log("Connected: ", mess);
-          });
-
-          newConnection.on("Message", mess => {
-            handleMessage();
-          });
-
-          await newConnection.invoke("Login");
-        } catch (error) {
-          console.log(error);
-        }
-      } else {
-        console.log("faild access token");
-      }
-    };
-    handle();
-
-    handleMessage();
-  }, []);
+    _setIsLoading(true);
+    if (_allMessage) {
+      handleMessage(_allMessage);
+    } else {
+      let getMessage = (async function get() {
+        const response = await messageRoomsService.getAllMessageRooms();
+        handleMessage(response);
+      })();
+    }
+  }, [_allMessage]);
 
   const _handleSelectChatBox = index => {
     _seIndexMessageState(index);
@@ -102,7 +76,7 @@ export const MailBox = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView>
+    <SafeAreaView style={{ opacity: _isLoading ? 0.5 : 1 }}>
       <View
         style={{
           borderBottomWidth: 1,
@@ -132,6 +106,17 @@ export const MailBox = ({ navigation }) => {
           _listChat={_listChat}
           _handleSelectChatBox={_handleSelectChatBox}
         />
+      )}
+      {_isLoading && (
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
       )}
     </SafeAreaView>
   );

@@ -54,19 +54,21 @@ export const Chat = ({ navigation, _listChat, _handleSelectChatBox }) => {
                     numberOfLines={1}
                     ellipsizeMode="tail"
                     style={{
-                      width: appTheme.WIDTH - 210,
+                      width: appTheme.WIDTH - 170,
                       color: colors.text,
                       opacity: 0.5,
                     }}
                   >
                     {item.lastedText}
                   </Text>
-                  {moment(item.lastedTime).isSame(new Date(), "day") && (
-                    <Text>{moment(item.lastedTime).format("hh:mm A")}</Text>
-                  )}
-                  {!moment(item.lastedTime).isSame(new Date(), "day") && (
-                    <Text>{moment(item.lastedTime).format("DD MMM")}</Text>
-                  )}
+                  {item.lastedTime !== "" &&
+                    moment(item.lastedTime).isSame(new Date(), "day") && (
+                      <Text>{moment(item.lastedTime).format("hh:mm A")}</Text>
+                    )}
+                  {item.lastedTime !== "" &&
+                    !moment(item.lastedTime).isSame(new Date(), "day") && (
+                      <Text>{moment(item.lastedTime).format("DD MMM")}</Text>
+                    )}
                 </View>
               </View>
             </TouchableOpacity>
