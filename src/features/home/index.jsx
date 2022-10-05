@@ -8,22 +8,21 @@ import {
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import MapView from "react-native-maps";
-import { Octicons, Ionicons } from "@expo/vector-icons";
+import { Octicons, Ionicons, FontAwesome, Entypo } from "@expo/vector-icons";
 import { Avatar, BoxAddress } from "../../components";
 import { IMAGES } from "../../assets/index";
 import { appTheme, colors, fontSize } from "../../constants";
 import createStyle from "./style";
 import numberWithCommas from "../../utils/numberWithCommas";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRecoilState, useSetRecoilState } from "recoil";
+import { useSetRecoilState } from "recoil";
 import { HubConnectionBuilder } from "@microsoft/signalr";
-import { connectionState } from "../../store";
 import messageRoomsService from "../../services/messageRoom";
 import { allMessageState } from "../../store/messageState";
 
 export const Home = ({ navigation }) => {
   const styles = createStyle();
-
+  const [_searchText, _setSearchText] = useState("");
   const [region, setRegion] = useState({
     latitude: 10.841626311529279,
     latitudeDelta: 0.01793054891924406,
@@ -137,13 +136,16 @@ export const Home = ({ navigation }) => {
         )}
       </SafeAreaView>
       <View style={styles.wrappJourney}>
-        <View>
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={() => navigation.navigate("BookingReceive")}
+        >
           <BoxAddress
             styleBox={styles.boxAddress}
-            from="17 Duong D5A, Phuoc Long B5A, Phuoc Long B"
-            to="Dai hoc FPT Ho Chi Minh Campus quan 9 thanh pho ho chi minh"
+            from="Trường đại học FPT"
+            to="Trường đại học Nguyễn Tất Thành"
           />
-        </View>
+        </TouchableOpacity>
         <View style={{ alignItems: "flex-end", justifyContent: "center" }}>
           <Text style={styles.textWallet}>Account wallet</Text>
           <View style={{ flexDirection: "row" }}>
