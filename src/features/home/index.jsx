@@ -8,33 +8,21 @@ import {
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import MapView from "react-native-maps";
-// import MapboxGL, { Camera, MapView } from "@rnmapbox/maps";
 import { Octicons, Ionicons, FontAwesome, Entypo } from "@expo/vector-icons";
 import { Avatar, BoxAddress } from "../../components";
 import { IMAGES } from "../../assets/index";
 import { appTheme, colors, fontSize } from "../../constants";
 import createStyle from "./style";
 import numberWithCommas from "../../utils/numberWithCommas";
-// import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useSetRecoilState } from "recoil";
 import { HubConnectionBuilder } from "@microsoft/signalr";
 import messageRoomsService from "../../services/messageRoom";
 import { allMessageState } from "../../store/messageState";
 
-// MapboxGL.setAccessToken(
-//   "sk.eyJ1IjoidGhhbnRoYW5oZHV5MDExMSIsImEiOiJjbDhpcndid2swdTRsM3BtcmxhY2FtZTB6In0.8GbSlN9T__VxWcNgxNjxzQ"
-// );
-
 export const Home = ({ navigation }) => {
-  // const camera = useRef(null);
-
   const styles = createStyle();
-  // long, lat
-  // const [coordinatesFrom] = useState([106.8099978721756, 10.84057839865839]);
-  // const [coordinatesTo] = useState([106.81035219090674, 10.838027429470513]);
   const [_searchText, _setSearchText] = useState("");
-
   const [region, setRegion] = useState({
     latitude: 10.841626311529279,
     latitudeDelta: 0.01793054891924406,
@@ -57,25 +45,6 @@ export const Home = ({ navigation }) => {
       _setIsLoading(false);
     }, 1000);
   };
-
-  // const handleText = async text => {
-  //   _setSearchText(text);
-  //   const res = await axios.get(
-  //     `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
-  //       text
-  //     )}.json`,
-  //     {
-  //       params: {
-  //         access_token:
-  //           "pk.eyJ1IjoidGhhbnRoYW5oZHV5MDExMSIsImEiOiJjbDhpajA0ODIwaWMzM3FuMDF4YXlqOThpIn0.165QMT1c71E_tPbxkBcNzg",
-  //         type: "VN",
-  //       },
-  //     }
-  //   );
-  //   if (res !== null) {
-  //     console.log(res);
-  //   }
-  // };
 
   useEffect(() => {
     const handle = async () => {
@@ -122,102 +91,6 @@ export const Home = ({ navigation }) => {
         initialRegion={region.latitude ? region : null}
         onRegionChange={onRegionChange}
       />
-      {/* <MapboxGL.MapView
-        style={[StyleSheet.absoluteFill, { flex: 1 }]}
-        onRegionDidChange={values => {
-          console.log(values);
-        }}
-      >
-        <MapboxGL.Camera
-          bounds={{
-            ne: coordinatesFrom,
-            sw: coordinatesTo,
-            paddingLeft: 40,
-            paddingRight: 40,
-            paddingTop: 200,
-            paddingBottom: 200,
-          }}
-          animationDuration={false}
-          zoomLevel={13}
-          // centerCoordinate={coordinatesFrom}
-          ref={camera}
-        />
-        <MapboxGL.MarkerView coordinate={coordinatesFrom}>
-          <View
-            style={[
-              {
-                transform: [{ rotate: "-45deg" }],
-              },
-              {
-                width: 24,
-                height: 24,
-                justifyContent: "center",
-                alignItems: "center",
-                backgroundColor: colors.primary,
-                borderTopLeftRadius: 100,
-                borderTopRightRadius: 100,
-                borderBottomEndRadius: 100,
-                marginRight: 10,
-              },
-            ]}
-          >
-            <FontAwesome
-              style={[
-                { marginLeft: 1 },
-                {
-                  transform: [{ rotate: "45deg" }],
-                },
-              ]}
-              name="arrow-up"
-              size={16}
-              color="white"
-            />
-          </View>
-        </MapboxGL.MarkerView>
-        <MapboxGL.MarkerView coordinate={coordinatesTo}>
-          <View
-            style={[
-              {
-                transform: [{ rotate: "-45deg" }],
-              },
-              {
-                width: 24,
-                height: 24,
-                justifyContent: "center",
-                alignItems: "center",
-                backgroundColor: colors.orange,
-                borderTopLeftRadius: 100,
-                borderTopRightRadius: 100,
-                borderBottomEndRadius: 100,
-                marginRight: 10,
-              },
-            ]}
-          >
-            <Entypo
-              style={[
-                { marginLeft: 1 },
-                {
-                  transform: [{ rotate: "45deg" }],
-                },
-              ]}
-              name="dot-single"
-              size={24}
-              color="white"
-            />
-          </View>
-        </MapboxGL.MarkerView> */}
-      {/* <MapboxGL.ShapeSource id="line1" shape={route}>
-          <MapboxGL.LineLayer
-            id="routeFill"
-            style={{
-              lineColor: "#ff8109",
-              lineWidth: 3.2,
-              // lineCap: MapboxGL.LineJoin.Round,
-              lineOpacity: 1.84,
-            }}
-          />
-        </MapboxGL.ShapeSource> */}
-      {/* </MapboxGL.MapView> */}
       <SafeAreaView style={{ flex: _isLoading ? 1 : 0 }}>
         <View style={styles.container}>
           <TouchableOpacity
