@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from "react-native";
 import React from "react";
-import { colors, fontSize } from "../../../constants";
+import { styles } from "./styles";
 
 export const WrapperContent = ({ label, text }) => {
   return (
@@ -10,27 +10,3 @@ export const WrapperContent = ({ label, text }) => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    marginHorizontal: 15,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    marginTop: 15,
-    borderRadius: 8,
-    padding: 20,
-    backgroundColor: "#FBFCFE",
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  textlabel: {
-    color: "#696969",
-    fontFamily: "Roboto_500",
-    fontSize: fontSize.medium,
-  },
-  text: {
-    color: colors.text,
-    fontFamily: "Roboto_500",
-    fontSize: fontSize.medium,
-  },
-});

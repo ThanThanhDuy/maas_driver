@@ -21,7 +21,6 @@ export const MailBox = ({ navigation }) => {
   const _allMessage = useRecoilValue(allMessageState);
 
   const handleMessage = async response => {
-    console.log(response);
     if (
       response &&
       response.StatusCode === 200 &&
