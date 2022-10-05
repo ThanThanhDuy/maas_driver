@@ -1,3 +1,4 @@
+# $RNMapboxMapsImpl = 'mapbox'
 require File.join(File.dirname(`node --print "require.resolve('expo/package.json')"`), "scripts/autolinking")
 require File.join(File.dirname(`node --print "require.resolve('react-native/package.json')"`), "scripts/react_native_pods")
 require File.join(File.dirname(`node --print "require.resolve('@react-native-community/cli-platform-ios/package.json')"`), "native_modules")
@@ -13,6 +14,7 @@ target 'ViGo' do
   use_expo_modules!
   config = use_native_modules!
 
+  # pod 'MapboxMaps', '10.8.1'
   pod 'Firebase', :modular_headers => true
   pod 'FirebaseCore', :modular_headers => true
   pod 'FirebaseCoreInternal', :modular_headers => true
@@ -38,9 +40,14 @@ target 'ViGo' do
   #   use_flipper!()
   # end
 
+  # pre_install do |installer|
+  #   $RNMapboxMaps.pre_install(installer)
+  # end
+
   post_install do |installer|
     react_native_post_install(installer)
     __apply_Xcode_12_5_M1_post_install_workaround(installer)
+    # $RNMapboxMaps.post_install(installer)
   end
 
   post_integrate do |installer|

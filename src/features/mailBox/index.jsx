@@ -21,7 +21,13 @@ export const MailBox = ({ navigation }) => {
   const _allMessage = useRecoilValue(allMessageState);
 
   const handleMessage = async response => {
-    if (response && response.StatusCode === 200) {
+    console.log(response);
+    if (
+      response &&
+      response.StatusCode === 200 &&
+      response?.Data &&
+      response?.Data?.length > 0
+    ) {
       _setIsNoChat(false);
       _setMessageState(response.Data[_indexMessageState]);
       let listChatRes = response.Data;
@@ -55,6 +61,7 @@ export const MailBox = ({ navigation }) => {
       _setIsLoading(false);
     } else {
       _setIsNoChat(true);
+      _setIsLoading(false);
     }
   };
 
@@ -85,7 +92,7 @@ export const MailBox = ({ navigation }) => {
           paddingVertical: 10,
         }}
       >
-        <Title title="MailBox" />
+        <Title level="h2" title="MailBox" />
       </View>
       <Title
         title="Quick actions"
