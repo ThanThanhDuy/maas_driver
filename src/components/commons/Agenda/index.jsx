@@ -16,13 +16,23 @@ import { bookingSelected } from "../../../store";
 import { getDate, getHour } from "../../../utils/getDate";
 import { getDistanceArray } from "../../../utils/getDistance";
 import { styles } from "./style";
+import { ActivityIndicator } from "react-native-paper";
 
-export const Agenda = ({ _listSchedule, navigation }) => {
+export const Agenda = ({
+  _listSchedule,
+  navigation,
+  handleLoadMore,
+  _isLoading,
+}) => {
   const _setBookingSelected = useSetRecoilState(bookingSelected);
 
   const handleSelect = item => {
     _setBookingSelected(item);
     navigation.navigate("BookingReceive");
+  };
+
+  const handleLoad = () => {
+    handleLoadMore();
   };
   return (
     <FlatList
@@ -33,6 +43,9 @@ export const Agenda = ({ _listSchedule, navigation }) => {
           <View style={styles.containerWeek}>
             <Text style={styles.textDay}>
               {moment(item.Date, "DD-MM-YYYY").format("DD")}
+            </Text>
+            <Text style={styles.textDay}>
+              {moment(item.Date, "DD-MM-YYYY").format("MMM")}
             </Text>
             <Text style={styles.textWeek}>
               {getDate(item.Date, "DD-MM-YYYY")}
@@ -79,7 +92,7 @@ export const Agenda = ({ _listSchedule, navigation }) => {
                       <Text numberOfLines={1}>
                         {
                           itemR?.Schedules[itemR?.Schedules.length - 1]
-                            ?.EndStationCode?.Name
+                            ?.EndStation?.Name
                         }
                       </Text>
                     </View>
@@ -95,8 +108,16 @@ export const Agenda = ({ _listSchedule, navigation }) => {
       contentContainerStyle={{ marginHorizontal: 10 }}
       style={{
         marginTop: 10,
-        height: appTheme.HEIGHT - 303,
+        height: appTheme.HEIGHT - 273,
       }}
+      onEndReached={({ distanceFromEnd }) => handleLoad(distanceFromEnd)}
+      ListFooterComponent={() =>
+        _isLoading ? (
+          <View style={{ marginBottom: 20 }}>
+            <ActivityIndicator color={colors.primary} />
+          </View>
+        ) : null
+      }
     />
   );
 };

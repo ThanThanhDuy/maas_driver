@@ -7,7 +7,7 @@ import React, { useState } from "react";
 import createStyle from "./style";
 import { colors } from "../../../constants/index";
 
-const Dropdown = props => {
+export const Dropdown = props => {
   const {
     height = 50,
     width = 160,
@@ -120,7 +120,6 @@ const Dropdown = props => {
               />
             </>
           )}
-          {/* select date */}
           {mode === "date" && (
             <>
               <Text style={styles.textTime}>
@@ -158,5 +157,3 @@ const Dropdown = props => {
     </TouchableOpacity>
   );
 };
-
-export default Dropdown;

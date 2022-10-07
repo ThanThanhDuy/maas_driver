@@ -4,7 +4,6 @@ import {
   SafeAreaView,
   StyleSheet,
   TouchableOpacity,
-  ActivityIndicator,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import MapView from "react-native-maps";
@@ -19,6 +18,7 @@ import { useSetRecoilState } from "recoil";
 import { HubConnectionBuilder } from "@microsoft/signalr";
 import messageRoomsService from "../../services/messageRoom";
 import { allMessageState } from "../../store/messageState";
+import { ActivityIndicator } from "react-native-paper";
 
 export const Home = ({ navigation }) => {
   const styles = createStyle();
@@ -85,7 +85,7 @@ export const Home = ({ navigation }) => {
   }, []);
 
   return (
-    <View style={{ flex: 1, opacity: _isLoading ? 0.5 : 1 }}>
+    <View style={{ flex: 1 }}>
       <MapView
         style={StyleSheet.absoluteFill}
         initialRegion={region.latitude ? region : null}
@@ -120,20 +120,22 @@ export const Home = ({ navigation }) => {
               activeOpacity={0.7}
               onPress={_handleWorking}
             >
-              <Ionicons
-                name="power"
-                size={32}
-                color={_isWorking ? colors.white : colors.text}
-                style={{ marginLeft: 4 }}
-              />
+              {_isLoading ? (
+                <ActivityIndicator
+                  size={34}
+                  color={_isWorking ? colors.white : colors.primary}
+                />
+              ) : (
+                <Ionicons
+                  name="power"
+                  size={32}
+                  color={_isWorking ? colors.white : colors.text}
+                  style={{ paddingLeft: 2.4 }}
+                />
+              )}
             </TouchableOpacity>
           </View>
         </View>
-        {_isLoading && (
-          <View style={styles.loading}>
-            <ActivityIndicator size="large" color={colors.primary} />
-          </View>
-        )}
       </SafeAreaView>
       <View style={styles.wrappJourney}>
         <TouchableOpacity
