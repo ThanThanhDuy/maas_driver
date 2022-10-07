@@ -1,139 +1,74 @@
 import { View, SafeAreaView } from "react-native";
 import React, { useEffect, useState } from "react";
-import { Agenda, Title } from "../../components";
+import { Agenda, Dropdown, Title } from "../../components";
 import { colors } from "../../constants";
+import scheduleService from "../../services/Schedule";
+import moment from "moment";
+import { AntDesign } from "@expo/vector-icons";
 
 export const Schedule = ({ navigation }) => {
   const [_listSchedule, _setListSchedule] = useState(null);
+  const [_page, _setPage] = useState(1);
+  const [_totalCountPage, _setTotalCountPage] = useState(1);
+  const [_isLoading, _setIsLoading] = useState(true);
+  const [_checkChangeTime, _setCheckChangeTime] = useState(true);
+  const [_dateFrom, _setDateFrom] = useState(new Date());
+  const [_dateTo, _setDateTo] = useState(
+    moment(new Date()).add(14, "days").toDate()
+  );
 
   useEffect(() => {
-    setTimeout(() => {
-      const respone = {
-        Items: [
-          {
-            Date: "15-10-2022",
-            Routes: [
-              {
-                RouteCode: "123",
-                Schedules: [
-                  {
-                    Time: "08:30:00",
-                    StartStation: {
-                      Name: "Trường đại học FPT",
-                      Code: "...",
-                      Address: `Đường D1, Long Thạnh Mỹ, Thành phố Thủ Đức, Thành phố Hồ Chí Minh`,
-                    },
-                    EndStationCode: {
-                      Name: "VBN",
-                      Code: "...",
-                      Address: `Đường D1, Long Thạnh Mỹ, Thành phố Thủ Đức, Thành phố Hồ Chí Minh`,
-                    },
-                    Price: 35000,
-                    PaymentMethod: 1,
-                    PaymentStatus: 1,
-                    Distance: 2349,
-                    User: {
-                      Code: "",
-                      Name: "Than Thanh Duy",
-                      PhoneNumber: "0376826328",
-                      Gender: 1,
-                      ChattingRoomCode: "",
-                    },
-                  },
-                  {
-                    Time: "09:00:00",
-                    StartStation: {
-                      Name: "QWE",
-                      Code: "...",
-                      Address: `Đường D1, Long Thạnh Mỹ, Thành phố Thủ Đức, Thành phố Hồ Chí Minh`,
-                    },
-                    EndStationCode: {
-                      Name: "Công ty Cổ phần Hàng không VietJet",
-                      Code: "...",
-                      Address: `Đường D1, Long Thạnh Mỹ, Thành phố Thủ Đức, Thành phố Hồ Chí Minh`,
-                    },
-                    Price: 35000,
-                    Distance: 1000,
-                    PaymentMethod: 1,
-                    PaymentStatus: 0,
-                    User: {
-                      Code: "",
-                      Name: "Nguyen Dang Khoa",
-                      PhoneNumber: "",
-                      Gender: 1,
-                      ChattingRoomCode: "",
-                    },
-                  },
-                  {
-                    Time: "09:00:00",
-                    StartStation: {
-                      Name: "QWE",
-                      Code: "...",
-                      Address: `Đường D1, Long Thạnh Mỹ, Thành phố Thủ Đức, Thành phố Hồ Chí Minh`,
-                    },
-                    EndStationCode: {
-                      Name: "LKJ",
-                      Code: "...",
-                      Address: `Đường D1, Long Thạnh Mỹ, Thành phố Thủ Đức, Thành phố Hồ Chí Minh`,
-                    },
-                    Price: 35000,
-                    PaymentMethod: 1,
-                    Distance: 456,
-                    PaymentStatus: 0,
-                    User: {
-                      Code: "",
-                      Name: "Quach Dai Loi",
-                      PhoneNumber: "",
-                      Gender: 1,
-                      ChattingRoomCode: "",
-                    },
-                  },
-                ],
-              },
-            ],
-          },
-          {
-            Date: "16-10-2022",
-            Routes: [
-              {
-                RouteCode: "456",
-                Schedules: [
-                  {
-                    Time: "08:30:00",
-                    StartStation: {
-                      Name: "ABC",
-                      Code: "...",
-                      Address: `Đường D1, Long Thạnh Mỹ, Thành phố Thủ Đức, Thành phố Hồ Chí Minh`,
-                    },
-                    EndStationCode: {
-                      Name: "XYZ",
-                      Code: "...",
-                      Address: `Đường D1, Long Thạnh Mỹ, Thành phố Thủ Đức, Thành phố Hồ Chí Minh`,
-                    },
-                    Price: 35000,
-                    PaymentMethod: 1,
-                    Distance: 234,
-                    PaymentStatus: 0,
-                    User: {
-                      Code: "",
-                      Name: "...",
-                      PhoneNumber: "",
-                      Gender: 1,
-                      ChattingRoomCode: "",
-                    },
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-      };
-
-      if (respone && respone.Items && respone.Items.length > 0) {
-        _setListSchedule(respone?.Items);
+    const getSchedule = async () => {
+      if (_page <= _totalCountPage && _checkChangeTime) {
+        _setIsLoading(true);
+        const respone = await scheduleService.getScheduleByDate(
+          _page,
+          5,
+          moment(_dateFrom).format("DD-MM-YYYY"),
+          moment(_dateTo).format("DD-MM-YYYY")
+        );
+        if (
+          respone.Data &&
+          respone.Data.Items &&
+          respone.Data.Items.length > 0
+        ) {
+          _setListSchedule(
+            _listSchedule === null
+              ? [].concat(respone?.Data.Items)
+              : _listSchedule.concat(respone?.Data.Items)
+          );
+          _setTotalCountPage(respone?.Data.TotalPagesCount);
+          _setIsLoading(false);
+        }
       }
-    }, 1000);
-  }, []);
+    };
+    getSchedule();
+  }, [_page]);
+
+  useEffect(() => {
+    const getSchedule = async () => {
+      _setIsLoading(true);
+      _setCheckChangeTime(false);
+      _setPage(1);
+      const respone = await scheduleService.getScheduleByDate(
+        1,
+        5,
+        moment(_dateFrom).format("DD-MM-YYYY"),
+        moment(_dateTo).format("DD-MM-YYYY")
+      );
+      if (respone.Data && respone.Data.Items && respone.Data.Items.length > 0) {
+        _setListSchedule(respone?.Data.Items);
+        _setTotalCountPage(respone?.Data.TotalPagesCount);
+        _setIsLoading(false);
+      }
+    };
+    getSchedule();
+  }, [_dateFrom, _dateTo]);
+
+  const handleLoadMore = () => {
+    _setCheckChangeTime(true);
+    _setPage(_page + 1);
+  };
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
@@ -147,12 +82,47 @@ export const Schedule = ({ navigation }) => {
       >
         <Title level="h2" title="Schedule" />
       </View>
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          marginHorizontal: 20,
+        }}
+      >
+        <Dropdown
+          label="From"
+          mode="date"
+          date={_dateFrom}
+          onDoneValue={date => {
+            _setDateFrom(date);
+          }}
+          IconFront={
+            <AntDesign name="calendar" size={24} color={colors.text} />
+          }
+          styleBox={{ backgroundColor: colors.transparent, width: 160 }}
+        />
+        <Dropdown
+          label="To"
+          mode="date"
+          date={_dateTo}
+          onDoneValue={date => {
+            _setDateTo(date);
+          }}
+          IconFront={
+            <AntDesign name="calendar" size={24} color={colors.text} />
+          }
+          styleBox={{ backgroundColor: colors.transparent, width: 160 }}
+        />
+      </View>
       {_listSchedule && (
         <View>
           {/* list schedule */}
-          <Agenda _listSchedule={_listSchedule} navigation={navigation} />
-          {/* navigation */}
-          <View></View>
+          <Agenda
+            _listSchedule={_listSchedule}
+            navigation={navigation}
+            handleLoadMore={handleLoadMore}
+            _isLoading={_isLoading}
+          />
         </View>
       )}
     </SafeAreaView>

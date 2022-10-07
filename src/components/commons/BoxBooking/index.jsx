@@ -22,13 +22,13 @@ export const BoxBooking = ({ item, index }) => {
       {/* to */}
       <View style={styles.boxLine}>
         <Octicons name="dot-fill" size={16} color={colors.orange} />
-        <Text style={styles.textTitle}>{item.EndStationCode.Name}</Text>
+        <Text style={styles.textTitle}>{item.EndStation.Name}</Text>
       </View>
       <View style={styles.boxAddress}>
         <View style={styles.wrapperAddress}>
           <View style={styles.deviderTrans}></View>
         </View>
-        <Text style={styles.textAddress}>{item.EndStationCode.Address}</Text>
+        <Text style={styles.textAddress}>{item.EndStation.Address}</Text>
       </View>
       {/* distance */}
       <View style={styles.boxLine}>
@@ -62,12 +62,12 @@ export const BoxBooking = ({ item, index }) => {
       <View style={styles.boxUser}>
         <View>
           <Text style={[styles.textTitle, { marginLeft: 0 }]}>
-            {item.User.Name}
+            {item.Users[0].Name}
           </Text>
         </View>
         <View style={styles.boxLine}>
           <TouchableOpacity
-            onPress={() => callNumber(item.User.PhoneNumber)}
+            onPress={() => callNumber(item.Users[0].PhoneNumber)}
             activeOpacity={0.7}
             style={styles.boxPhone}
           >

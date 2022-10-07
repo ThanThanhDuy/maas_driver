@@ -1,21 +1,15 @@
 import React, { useState } from "react";
-import {
-  View,
-  Image,
-  Text,
-  SafeAreaView,
-  ActivityIndicator,
-  Alert,
-} from "react-native";
+import { View, Image, Text, SafeAreaView, Alert } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
 import auth from "@react-native-firebase/auth";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { IMAGES, LOGO } from "../../../assets";
 import { Title, Button } from "../../../components/index";
-import { appTheme } from "../../../constants";
+import { appTheme, colors } from "../../../constants";
 import { styles } from "./styles";
 import driverService from "../../../services/driver";
+import { ActivityIndicator } from "react-native-paper";
 
 GoogleSignin.configure({
   webClientId:
@@ -51,7 +45,7 @@ export const Login = ({ navigation }) => {
 
   return (
     <>
-      <SafeAreaView style={[styles.container, _loading && { opacity: 0.7 }]}>
+      <SafeAreaView style={styles.container}>
         <View>
           <Image
             style={{
@@ -90,20 +84,12 @@ export const Login = ({ navigation }) => {
             width={appTheme.WIDTH * 0.9}
             onPress={onGoogleButtonPress}
             marginBottom={60}
+            iconBehind={
+              _loading && <ActivityIndicator size={24} color={colors.white} />
+            }
           />
         </View>
       </SafeAreaView>
-      {_loading && (
-        <ActivityIndicator
-          style={{
-            position: "absolute",
-            top: appTheme.HEIGHT / 2 - 5,
-            left: appTheme.WIDTH / 2 - 10,
-          }}
-          size="large"
-          color="#000"
-        />
-      )}
     </>
   );
 };

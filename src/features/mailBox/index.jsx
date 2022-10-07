@@ -1,4 +1,4 @@
-import { View, SafeAreaView, ActivityIndicator } from "react-native";
+import { View, SafeAreaView } from "react-native";
 import React, { useState, useEffect } from "react";
 import { useSetRecoilState, useRecoilValue } from "recoil";
 import { colors } from "../../constants";
@@ -9,6 +9,7 @@ import { Chat } from "./Chat";
 import messageRoomsService from "../../services/messageRoom";
 import { indexMessageState, messageState } from "../../store";
 import { allMessageState } from "../../store/messageState";
+import { ActivityIndicator } from "react-native-paper";
 
 export const MailBox = ({ navigation }) => {
   const [_isNoChat, _setIsNoChat] = useState(null);
@@ -121,7 +122,7 @@ export const MailBox = ({ navigation }) => {
             alignItems: "center",
           }}
         >
-          <ActivityIndicator size="large" color={colors.primary} />
+          <ActivityIndicator size="small" color={colors.primary} />
         </View>
       )}
     </SafeAreaView>
