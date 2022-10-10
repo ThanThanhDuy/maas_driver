@@ -148,7 +148,11 @@ export const BookingReceive = ({ navigation }) => {
           >
             <Ionicons name="close" size={32} color={colors.red} />
           </TouchableOpacity>
-          <TouchableOpacity activeOpacity={0.6} style={styles.boxStart}>
+          <TouchableOpacity
+            activeOpacity={0.6}
+            style={styles.boxStart}
+            onPress={() => navigation.navigate("Driving")}
+          >
             <Text style={styles.textStart}>Start</Text>
           </TouchableOpacity>
         </View>

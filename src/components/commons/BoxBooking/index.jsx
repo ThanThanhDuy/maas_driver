@@ -1,4 +1,4 @@
-import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, Linking } from "react-native";
 import React from "react";
 import { colors, fontSize } from "../../../constants";
 import { Octicons, Ionicons, FontAwesome5 } from "@expo/vector-icons";
@@ -7,6 +7,12 @@ import { getHour } from "../../../utils/getDate";
 import { styles } from "./style";
 
 export const BoxBooking = ({ item, index }) => {
+  const callNumber = phone => {
+    if (phone) {
+      let phoneNumber = `tel:${phone}`;
+      Linking.openURL(phoneNumber);
+    }
+  };
   return (
     <View key={index} style={styles.container}>
       <View style={styles.boxLine}>
