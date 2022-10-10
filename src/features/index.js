@@ -6,6 +6,7 @@ import { MailBox } from "./mailBox";
 import { Profile } from "./profile";
 import { Schedule } from "./schedule";
 import { BookingReceive } from "./bookingReceive";
+import { Driving } from "./driving";
 
 export {
   WelCome,
@@ -16,4 +17,5 @@ export {
   Profile,
   Schedule,
   BookingReceive,
+  Driving,
 };

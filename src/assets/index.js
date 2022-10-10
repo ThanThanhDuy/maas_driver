@@ -6,6 +6,7 @@ const promotion1 = require("./images/promotion1.png");
 const promotion2 = require("./images/promotion2.png");
 const promotion3 = require("./images/promotion3.png");
 const noOrderBanner = require("./images/banner_no_order.png");
+const success = require("./images/success.png");
 // icons
 const rideIcon = require("./icons/ride.png");
 const carIcon = require("./icons/car.png");
@@ -24,6 +25,7 @@ export const IMAGES = {
   promotion2,
   promotion3,
   noOrderBanner,
+  success,
 };
 
 export const ICONS = {

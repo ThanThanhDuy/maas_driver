@@ -13,6 +13,8 @@ import { IconTo } from "./commons/IconTo";
 import { Agenda } from "./commons/Agenda";
 import { BoxBooking } from "./commons/BoxBooking";
 import { WrapperContent } from "./commons/WrapperContent";
+import { StepDriving } from "./commons/StepDriving";
+import { Success } from "./commons/Success";
 
 export {
   Button,
@@ -30,4 +32,6 @@ export {
   Agenda,
   BoxBooking,
   WrapperContent,
+  StepDriving,
+  Success,
 };
