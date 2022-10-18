@@ -14,11 +14,12 @@ import { appTheme, colors, fontSize } from "../../constants";
 import createStyle from "./style";
 import numberWithCommas from "../../utils/numberWithCommas";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useSetRecoilState } from "recoil";
+import { useRecoilState, useSetRecoilState } from "recoil";
 import { HubConnectionBuilder } from "@microsoft/signalr";
 import messageRoomsService from "../../services/messageRoom";
 import { allMessageState } from "../../store/messageState";
 import { ActivityIndicator } from "react-native-paper";
+import { userState } from "../../store";
 
 export const Home = ({ navigation }) => {
   const styles = createStyle();
@@ -32,12 +33,24 @@ export const Home = ({ navigation }) => {
   const [_isWorking, _setIsWorking] = useState(false);
   const [_isLoading, _setIsLoading] = useState(false);
   const _setAllMessage = useSetRecoilState(allMessageState);
+  const [user, setUser] = useRecoilState(userState);
 
-  const onRegionChange = region => {
+  const onRegionChange = (region) => {
     console.log(region);
     setRegion({ region });
   };
 
+  useEffect(() => {
+    _handleConnect();
+    _loadProfile();
+  }, []);
+
+  const _loadProfile = async () => {
+    const userStorage = await AsyncStorage.getItem("User");
+    if (!user) {
+      setUser(userStorage);
+    }
+  };
   const _handleWorking = () => {
     _setIsLoading(true);
     setTimeout(() => {
@@ -46,44 +59,40 @@ export const Home = ({ navigation }) => {
     }, 1000);
   };
 
-  useEffect(() => {
-    const handle = async () => {
-      const localAccessToken = await AsyncStorage.getItem("AccessToken");
-      if (localAccessToken) {
-        const accessToken = JSON.parse(localAccessToken);
-        const newConnection = new HubConnectionBuilder()
-          .withUrl("https://vigo-application.herokuapp.com/hubs", {
-            headers: {
-              "Access-Control-Allow-Origin": "*",
-            },
-            withCredentials: false,
-            accessTokenFactory: () => `${accessToken}`,
-          })
-          .withAutomaticReconnect()
-          .build();
+  const _handleConnect = async () => {
+    const localAccessToken = await AsyncStorage.getItem("AccessToken");
+    if (localAccessToken) {
+      const accessToken = JSON.parse(localAccessToken);
+      const newConnection = new HubConnectionBuilder()
+        .withUrl("https://vigo-application.herokuapp.com/hubs", {
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+          },
+          withCredentials: false,
+          accessTokenFactory: () => `${accessToken}`,
+        })
+        .withAutomaticReconnect()
+        .build();
 
-        await newConnection.start();
-        try {
-          await newConnection.invoke("Login");
+      await newConnection.start();
+      try {
+        await newConnection.invoke("Login");
 
-          newConnection.on("Connected", mess => {
-            console.log("Connected: ", mess);
-          });
+        newConnection.on("Connected", (mess) => {
+          console.log("Connected: ", mess);
+        });
 
-          newConnection.on("Message", async mess => {
-            const response = await messageRoomsService.getAllMessageRooms();
-            _setAllMessage(response);
-          });
-        } catch (error) {
-          console.log(error);
-        }
-      } else {
-        console.log("faild access token");
+        newConnection.on("Message", async (mess) => {
+          const response = await messageRoomsService.getAllMessageRooms();
+          _setAllMessage(response);
+        });
+      } catch (error) {
+        console.log(error);
       }
-    };
-    handle();
-  }, []);
-
+    } else {
+      console.log("faild access token");
+    }
+  };
   return (
     <View style={{ flex: 1 }}>
       <MapView
