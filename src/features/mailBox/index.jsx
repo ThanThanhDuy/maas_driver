@@ -1,59 +1,54 @@
 import { View, SafeAreaView } from "react-native";
 import React, { useState, useEffect } from "react";
-import { useSetRecoilState, useRecoilValue } from "recoil";
+import { useRecoilValue } from "recoil";
 import { colors } from "../../constants";
 import { Title } from "../../components";
 import { ActionBox } from "./ActionsBox";
 import { NoChat } from "./NoChat";
 import { Chat } from "./Chat";
 import messageRoomsService from "../../services/messageRoom";
-import { indexMessageState, messageState } from "../../store";
-import { allMessageState } from "../../store/messageState";
 import { ActivityIndicator } from "react-native-paper";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { loadMessageState } from "../../store";
 
 export const MailBox = ({ navigation }) => {
   const [_isNoChat, _setIsNoChat] = useState(null);
   const [_listChat, _setListChat] = useState([]);
   const [_isLoading, _setIsLoading] = useState(false);
   const [_listChatAll, _setListChatAll] = useState([]);
-  const _setMessageState = useSetRecoilState(messageState);
-  const _seIndexMessageState = useSetRecoilState(indexMessageState);
-  const _indexMessageState = useRecoilValue(indexMessageState);
-  const _allMessage = useRecoilValue(allMessageState);
+
+  const loadMessage = useRecoilValue(loadMessageState);
 
   const handleMessage = async response => {
-    if (
-      response &&
-      response.StatusCode === 200 &&
-      response?.Data &&
-      response?.Data?.length > 0
-    ) {
+    if (response && response.StatusCode === 200 && response?.Data) {
       _setIsNoChat(false);
-      _setMessageState(response.Data[_indexMessageState]);
       let listChatRes = response.Data;
-      _setListChatAll(response.Data);
       let listChat = [];
       for (let i = 0; i < listChatRes.length; i++) {
         const userChat = listChatRes[i].Users;
         let avatar;
         let userNameBooker;
+        const userCurrentLocal = await AsyncStorage.getItem("User");
+        const userCurrentObj = JSON.parse(userCurrentLocal);
         for (const user of userChat) {
-          if (user.RoleName === "BOOKER") {
+          if (user.Code !== userCurrentObj.Code) {
             avatar = user.AvatarUrl;
             userNameBooker = user.Name;
             userCodeBooker = user.Code;
+            userRoleName = "Booker";
           }
         }
         const messages = listChatRes[i].Messages;
         const roomCode = listChatRes[i].Code;
-        // console.log(roomCode);
         listChat.push({
           avatar,
+          roomCode,
+          roomType: listChatRes[i].Type,
           nameBooker: userNameBooker,
           lastedText:
             messages.length > 0 ? messages[messages.length - 1].Content : "",
           lastedTime:
-            messages.length > 0 ? messages[messages.length - 1].CreatedAt : "",
+            messages.length > 0 ? messages[messages.length - 1].Time : "",
           isRead: false,
         });
       }
@@ -67,19 +62,17 @@ export const MailBox = ({ navigation }) => {
 
   useEffect(() => {
     _setIsLoading(true);
-    if (_allMessage) {
-      handleMessage(_allMessage);
-    } else {
-      let getMessage = (async function get() {
-        const response = await messageRoomsService.getAllMessageRooms();
-        handleMessage(response);
-      })();
-    }
-  }, [_allMessage]);
+    let getMessage = (async function get() {
+      const response = await messageRoomsService.getMessageRooms();
+      handleMessage(response);
+    })();
+  }, [loadMessage]);
 
-  const _handleSelectChatBox = index => {
-    _seIndexMessageState(index);
-    _setMessageState(_listChatAll[index]);
+  const _handleSelectChatBox = (roomType, roomCode) => {
+    navigation.navigate("ChatDetail", {
+      roomCode,
+      roomType,
+    });
   };
 
   return (

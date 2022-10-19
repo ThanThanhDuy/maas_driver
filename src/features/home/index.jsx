@@ -17,9 +17,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRecoilState, useSetRecoilState } from "recoil";
 import { HubConnectionBuilder } from "@microsoft/signalr";
 import messageRoomsService from "../../services/messageRoom";
-import { allMessageState } from "../../store/messageState";
 import { ActivityIndicator } from "react-native-paper";
-import { userState } from "../../store";
+import { loadMessageState, userState } from "../../store";
 
 export const Home = ({ navigation }) => {
   const styles = createStyle();
@@ -32,10 +31,10 @@ export const Home = ({ navigation }) => {
   });
   const [_isWorking, _setIsWorking] = useState(false);
   const [_isLoading, _setIsLoading] = useState(false);
-  const _setAllMessage = useSetRecoilState(allMessageState);
   const [user, setUser] = useRecoilState(userState);
+  const _setLoadMessage = useSetRecoilState(loadMessageState);
 
-  const onRegionChange = (region) => {
+  const onRegionChange = region => {
     console.log(region);
     setRegion({ region });
   };
@@ -78,13 +77,13 @@ export const Home = ({ navigation }) => {
       try {
         await newConnection.invoke("Login");
 
-        newConnection.on("Connected", (mess) => {
+        newConnection.on("Connected", mess => {
           console.log("Connected: ", mess);
         });
 
-        newConnection.on("Message", async (mess) => {
-          const response = await messageRoomsService.getAllMessageRooms();
-          _setAllMessage(response);
+        newConnection.on("Message", async mess => {
+          const response = await messageRoomsService.getMessageRooms();
+          _setLoadMessage(response?.Data);
         });
       } catch (error) {
         console.log(error);
