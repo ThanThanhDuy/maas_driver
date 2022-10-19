@@ -1,9 +1,13 @@
 import messageRoomsApi from "../apis/messageRoom";
 
 class MessageRoomsService {
-  async getAllMessageRooms() {
+  async getMessageRooms(roomType, roomCode) {
+    const params = {
+      RoomType: roomType,
+      Code: roomCode,
+    };
     try {
-      var response = await messageRoomsApi.getAllMessageRooms();
+      var response = await messageRoomsApi.getMessageRooms(params);
     } catch (error) {
       return error;
     }

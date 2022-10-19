@@ -38,7 +38,9 @@ export const Message = ({ item, index }) => {
                 <Text
                   style={{ marginLeft: 10, color: colors.gray, marginTop: 5 }}
                 >
-                  {moment(item.time).format("DD MMM HH:mm A")}
+                  {moment(moment(item.time, "DD-MM-YYYY HH:mm:ss")).format(
+                    "DD MMM HH:mm A"
+                  )}
                 </Text>
               </View>
             )}
@@ -63,7 +65,9 @@ export const Message = ({ item, index }) => {
               <Text
                 style={{ marginLeft: 10, color: colors.gray, marginTop: 5 }}
               >
-                {moment(item.time).format("DD MMM HH:mm A")}
+                {moment(moment(item.time, "DD-MM-YYYY HH:mm:ss")).format(
+                  "DD MMM HH:mm A"
+                )}
               </Text>
             )}
           </View>
