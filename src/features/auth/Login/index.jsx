@@ -35,7 +35,6 @@ export const Login = ({ navigation }) => {
         "AccessToken",
         JSON.stringify(res?.Data.AccessToken)
       );
-      console.log(res?.Data);
       await AsyncStorage.setItem("User", JSON.stringify(res?.Data.User));
       navigation.navigate("Auth");
     } else {
