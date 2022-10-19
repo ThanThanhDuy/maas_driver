@@ -8,66 +8,82 @@ import {
   TouchableOpacity,
   FlatList,
 } from "react-native";
-import React, { useRef, useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Ionicons } from "@expo/vector-icons";
-import { useRecoilValue, useSetRecoilState } from "recoil";
+import { useRecoilValue } from "recoil";
 import { HeaderBack } from "../../../components";
 import { IMAGES } from "../../../assets";
 import { colors } from "../../../constants";
 import { Message } from "./Message";
 import { styles } from "./style";
 import messageService from "../../../services/message";
-import { indexMessageState, messageState } from "../../../store";
 import messageRoomsService from "../../../services/messageRoom";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { loadMessageState } from "../../../store";
 
-export const ChatDetail = ({ navigation }) => {
+export const ChatDetail = ({ navigation, route }) => {
   const [_textInput, _setTextInput] = useState("");
   const [_listChat, _setListChat] = useState([]);
   const [_phone, _setPhone] = useState("");
   const [_avatar, _setAvatar] = useState(null);
   const [_nameBooker, _setNameBooker] = useState(null);
-  const messageValue = useRecoilValue(messageState);
-  const indexMessage = useRecoilValue(indexMessageState);
-  const setMessageValue = useSetRecoilState(messageState);
+  const loadMessage = useRecoilValue(loadMessageState);
 
-  const handleRenderMessage = messageValue => {
+  const handleRenderMessage = async data => {
     let listMessage = [];
     let userCodeDriver;
-    for (const item of messageValue.Users) {
-      if (item.RoleName === "DRIVER") {
+    const userCurrentLocal = await AsyncStorage.getItem("User");
+    const userCurrentObj = JSON.parse(userCurrentLocal);
+    for (const item of data.Users) {
+      if (item.Code === userCurrentObj.Code) {
         userCodeDriver = item.Code;
       }
     }
-    for (const item of messageValue.Messages) {
+    for (const item of data.Messages) {
       listMessage.push({
         userCode: item.UserCode,
         message: item.Content,
         isDriver: item.UserCode === userCodeDriver ? true : false,
-        time: item.CreatedAt,
+        time: item.Time,
       });
     }
-    _setListChat(listMessage.reverse());
-  };
-
-  useEffect(() => {
-    handleRenderMessage(messageValue);
-    for (const user of messageValue.Users) {
-      if (user.RoleName === "BOOKER") {
+    for (const user of data.Users) {
+      if (user.Code !== userCurrentObj.Code) {
         _setAvatar(user.AvatarUrl);
         _setNameBooker(user.Name);
         _setPhone(user?.PhoneNumber.replace("+84", "0"));
       }
     }
-  }, [messageValue]);
+    _setListChat(listMessage.reverse());
+  };
+
+  useEffect(() => {
+    const roomCode = route.params.roomCode;
+    const roomType = route.params.roomType;
+    console.log(roomType, roomCode);
+    let getMessage = (async function get() {
+      const response = await messageRoomsService.getMessageRooms(
+        roomType,
+        roomCode
+      );
+      if (response && response.StatusCode === 200) {
+        await handleRenderMessage(response.Data[0]);
+      }
+    })();
+  }, [loadMessage]);
 
   const sendMessage = async message => {
+    const roomCode = route.params.roomCode;
+    const roomType = route.params.roomType;
     if (message.trim() !== "") {
-      let RoomCode = messageValue.Code;
-      const res = await messageService.sendMessage(RoomCode, message.trim());
+      await messageService.sendMessage(roomCode, message.trim());
       _setTextInput("");
-      const response = await messageRoomsService.getAllMessageRooms();
+      const response = await messageRoomsService.getMessageRooms(
+        roomType,
+        roomCode
+      );
       if (response && response.StatusCode === 200) {
-        setMessageValue(response?.Data[indexMessage]);
+        await handleRenderMessage(response.Data[0]);
       }
     }
   };

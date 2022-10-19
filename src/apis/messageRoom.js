@@ -2,9 +2,9 @@ import axiosClient from ".";
 
 class MessageRoomsApi {
   PREFIX = "messagerooms/";
-  async getAllMessageRooms() {
+  async getMessageRooms(params) {
     const url = `${this.PREFIX}`;
-    return await axiosClient.get(url);
+    return await axiosClient.get(url, { params });
   }
 }
 

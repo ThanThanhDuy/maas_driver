@@ -6,9 +6,9 @@ import { IMAGES } from "../../../assets";
 import { appTheme, colors } from "../../../constants";
 import { styles } from "./style";
 
-export const Chat = ({ navigation, _listChat, _handleSelectChatBox }) => {
-  const handleSelectMessage = index => {
-    _handleSelectChatBox(index);
+export const Chat = ({ _listChat, _handleSelectChatBox }) => {
+  const handleSelectMessage = (roomType, roomCode) => {
+    _handleSelectChatBox(roomType, roomCode);
   };
   return (
     <View style={{ marginLeft: 10, marginTop: 30, marginRight: 10 }}>
@@ -18,8 +18,7 @@ export const Chat = ({ navigation, _listChat, _handleSelectChatBox }) => {
           <View key={index}>
             <TouchableOpacity
               onPress={() => {
-                navigation.navigate("ChatDetail");
-                handleSelectMessage(index);
+                handleSelectMessage(item.roomType, item.roomCode);
               }}
               activeOpacity={0.7}
               style={{
@@ -62,12 +61,24 @@ export const Chat = ({ navigation, _listChat, _handleSelectChatBox }) => {
                     {item.lastedText}
                   </Text>
                   {item.lastedTime !== "" &&
-                    moment(item.lastedTime).isSame(new Date(), "day") && (
-                      <Text>{moment(item.lastedTime).format("hh:mm A")}</Text>
+                    moment(
+                      moment(item.lastedTime, "DD-MM-YYYY HH:mm:ss")
+                    ).isSame(new Date(), "day") && (
+                      <Text>
+                        {moment(
+                          moment(item.lastedTime, "DD-MM-YYYY HH:mm:ss")
+                        ).format("hh:mm A")}
+                      </Text>
                     )}
                   {item.lastedTime !== "" &&
-                    !moment(item.lastedTime).isSame(new Date(), "day") && (
-                      <Text>{moment(item.lastedTime).format("DD MMM")}</Text>
+                    !moment(
+                      moment(item.lastedTime, "DD-MM-YYYY HH:mm:ss")
+                    ).isSame(new Date(), "day") && (
+                      <Text>
+                        {moment(
+                          moment(item.lastedTime, "DD-MM-YYYY HH:mm:ss")
+                        ).format("DD MMM")}
+                      </Text>
                     )}
                 </View>
               </View>
