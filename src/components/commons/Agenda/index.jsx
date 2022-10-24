@@ -25,7 +25,6 @@ export const Agenda = ({
   _isLoading,
 }) => {
   const _setBookingSelected = useSetRecoilState(bookingSelected);
-
   const handleSelect = item => {
     _setBookingSelected(item);
     navigation.navigate("BookingReceive");

@@ -68,12 +68,12 @@ export const BoxBooking = ({ item, index }) => {
       <View style={styles.boxUser}>
         <View>
           <Text style={[styles.textTitle, { marginLeft: 0 }]}>
-            {item.Users[0].Name}
+            {item.User.Name}
           </Text>
         </View>
         <View style={styles.boxLine}>
           <TouchableOpacity
-            onPress={() => callNumber(item.Users[0].PhoneNumber)}
+            onPress={() => callNumber(item.User.PhoneNumber)}
             activeOpacity={0.7}
             style={styles.boxPhone}
           >

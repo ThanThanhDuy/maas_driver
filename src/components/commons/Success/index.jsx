@@ -43,6 +43,7 @@ export const Success = ({ navigation }) => {
           <AntDesign name="arrowleft" size={24} color={colors.primary} />
         }
         onPress={() => {
+          _setTabSelected("Home");
           navigation.navigate("Auth", {
             screen: "Home",
           });

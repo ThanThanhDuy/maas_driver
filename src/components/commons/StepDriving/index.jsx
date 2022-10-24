@@ -19,7 +19,7 @@ export const StepDriving = ({ step, index, maxLength }) => {
 
   return (
     <View>
-      {step?.position === "start" ? (
+      {step?.StationPosition === "start" ? (
         <View style={{ marginBottom: 10 }}>
           <View style={styles.containerAddress}>
             <View style={styles.boxInline}>
@@ -32,18 +32,18 @@ export const StepDriving = ({ step, index, maxLength }) => {
                 />
               </View>
               <View>
-                <Text style={styles.textTitle}>{step.name}</Text>
-                <Text style={styles.textAddress}>{step.address}</Text>
+                <Text style={styles.textTitle}>{step.StationName}</Text>
+                <Text style={styles.textAddress}>{step.StationAddress}</Text>
               </View>
             </View>
           </View>
           <View style={styles.boxUser}>
             <View style={styles.boxInline}>
-              <Text style={styles.textUser}>{step.user.Name}</Text>
+              <Text style={styles.textUser}>{step.UserName}</Text>
             </View>
             <View style={styles.boxInline}>
               <TouchableOpacity
-                onPress={() => callNumber(step.user.PhoneNumber)}
+                onPress={() => callNumber(step.PhoneNumber)}
                 activeOpacity={0.7}
                 style={{ marginRight: 15 }}
               >
@@ -80,14 +80,14 @@ export const StepDriving = ({ step, index, maxLength }) => {
                 />
               </View>
               <View>
-                <Text style={styles.textTitle}>{step.name}</Text>
-                <Text style={styles.textAddress}>{step.address}</Text>
+                <Text style={styles.textTitle}>{step.StationName}</Text>
+                <Text style={styles.textAddress}>{step.StationAddress}</Text>
               </View>
             </View>
           </View>
           <View style={styles.boxUser}>
             <View style={styles.boxInline}>
-              <Text style={styles.textUser}>{step.user.Name}</Text>
+              <Text style={styles.textUser}>{step.UserName}</Text>
             </View>
           </View>
           {index !== maxLength && <View style={styles.lineBreak}></View>}
