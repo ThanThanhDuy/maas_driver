@@ -4,42 +4,51 @@ import {
   SafeAreaView,
   StyleSheet,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import MapView from "react-native-maps";
-import { Octicons, Ionicons, FontAwesome, Entypo } from "@expo/vector-icons";
+import { Octicons, Ionicons } from "@expo/vector-icons";
 import { Avatar, BoxAddress } from "../../components";
 import { IMAGES } from "../../assets/index";
-import { appTheme, colors, fontSize } from "../../constants";
+import { colors, COMMONS } from "../../constants";
 import createStyle from "./style";
 import numberWithCommas from "../../utils/numberWithCommas";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRecoilState, useSetRecoilState } from "recoil";
-import { HubConnectionBuilder } from "@microsoft/signalr";
+import { HubConnectionBuilder, Subject } from "@microsoft/signalr";
 import messageRoomsService from "../../services/messageRoom";
 import { ActivityIndicator } from "react-native-paper";
 import { loadMessageState, userState } from "../../store";
+import * as Location from "expo-location";
 
 export const Home = ({ navigation }) => {
   const styles = createStyle();
   const [_searchText, _setSearchText] = useState("");
-  const [region, setRegion] = useState({
-    latitude: 10.841626311529279,
-    latitudeDelta: 0.01793054891924406,
-    longitude: 106.81133564102572,
-    longitudeDelta: 0.009999999999990905,
-  });
+  const [region, setRegion] = useState({});
   const [_isWorking, _setIsWorking] = useState(false);
   const [_isLoading, _setIsLoading] = useState(false);
   const [user, setUser] = useRecoilState(userState);
   const _setLoadMessage = useSetRecoilState(loadMessageState);
-
-  const onRegionChange = region => {
-    console.log(region);
-    setRegion({ region });
-  };
+  const [subject, setSubject] = useState(undefined);
 
   useEffect(() => {
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        console.log("denied");
+        return;
+      } else {
+        let location = await Location.getCurrentPositionAsync({});
+        let regionTmp = {
+          latitudeDelta: 0.01793054891924406,
+          longitudeDelta: 0.009999999999990905,
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        };
+        setRegion(regionTmp);
+      }
+    })();
     _handleConnect();
     _loadProfile();
   }, []);
@@ -50,12 +59,75 @@ export const Home = ({ navigation }) => {
       setUser(userStorage);
     }
   };
-  const _handleWorking = () => {
-    _setIsLoading(true);
-    setTimeout(() => {
-      _setIsWorking(!_isWorking);
-      _setIsLoading(false);
-    }, 1000);
+  const _handleWorking = async () => {
+    let { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Notification", "ViGo needs access to location");
+      return;
+    } else {
+      _setIsLoading(true);
+      if (!_isWorking) {
+        const localAccessToken = await AsyncStorage.getItem("AccessToken");
+        if (localAccessToken) {
+          const accessToken = JSON.parse(localAccessToken);
+          newConnectionLocation = new HubConnectionBuilder()
+            .withUrl(`${COMMONS.PREFIX_SOCKET}${COMMONS.SOCKET_LOCATION}`, {
+              headers: {
+                "Access-Control-Allow-Origin": "*",
+              },
+              withCredentials: false,
+              accessTokenFactory: () => `${accessToken}`,
+            })
+            .withAutomaticReconnect()
+            .build();
+          await newConnectionLocation.start();
+          try {
+            const _subject = new Subject();
+            await newConnectionLocation.send("StreamGps", _subject);
+            setSubject(_subject);
+            (async () => {
+              let location = await Location.getCurrentPositionAsync({});
+              const coordinates = {
+                Latitude: location.coords.latitude,
+                Longitude: location.coords.longitude,
+              };
+              _subject.next(coordinates);
+            })();
+            myInterval = setInterval(async () => {
+              let location = await Location.getCurrentPositionAsync({});
+              const coordinates = {
+                Latitude: location.coords.latitude,
+                Longitude: location.coords.longitude,
+              };
+              let regionTmp = {
+                latitudeDelta: 0.01793054891924406,
+                longitudeDelta: 0.009999999999990905,
+                latitude: location.coords.latitude,
+                longitude: location.coords.longitude,
+              };
+              setRegion(regionTmp);
+              console.log("send");
+              _subject.next(coordinates);
+            }, COMMONS.TIME_SEND_LOCATION);
+          } catch (error) {
+            console.log(error);
+          }
+        } else {
+          console.log("faild access token");
+        }
+        setTimeout(() => {
+          _setIsWorking(!_isWorking);
+          _setIsLoading(false);
+        }, 0);
+      } else {
+        setTimeout(() => {
+          subject?.complete();
+          clearInterval(myInterval);
+          _setIsWorking(!_isWorking);
+          _setIsLoading(false);
+        }, 1000);
+      }
+    }
   };
 
   const _handleConnect = async () => {
@@ -63,7 +135,7 @@ export const Home = ({ navigation }) => {
     if (localAccessToken) {
       const accessToken = JSON.parse(localAccessToken);
       const newConnection = new HubConnectionBuilder()
-        .withUrl("https://vigo-application.herokuapp.com/hubs", {
+        .withUrl(`${COMMONS.PREFIX_SOCKET}${COMMONS.SOCKET_CHAT}`, {
           headers: {
             "Access-Control-Allow-Origin": "*",
           },
@@ -92,12 +164,12 @@ export const Home = ({ navigation }) => {
       console.log("faild access token");
     }
   };
+
   return (
     <View style={{ flex: 1 }}>
       <MapView
         style={StyleSheet.absoluteFill}
-        initialRegion={region.latitude ? region : null}
-        onRegionChange={onRegionChange}
+        region={region?.latitude ? region : null}
       />
       <SafeAreaView style={{ flex: _isLoading ? 1 : 0 }}>
         <View style={styles.container}>
