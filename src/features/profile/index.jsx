@@ -61,6 +61,7 @@ export const Profile = ({ navigation }) => {
           <TouchableOpacity
             style={styles.wapperDriverSetting}
             activeOpacity={0.7}
+            onPress={() => navigation.navigate("DriverSetting")}
           >
             <View style={{ flexDirection: "row", alignItems: "center" }}>
               <Ionicons name="briefcase" size={24} color={colors.text} />
