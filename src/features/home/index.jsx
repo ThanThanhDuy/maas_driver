@@ -7,7 +7,7 @@ import {
   Alert,
 } from "react-native";
 import React, { useEffect, useState } from "react";
-import MapView from "react-native-maps";
+import MapView, { Marker } from "react-native-maps";
 import { Octicons, Ionicons } from "@expo/vector-icons";
 import { Avatar, BoxAddress } from "../../components";
 import { IMAGES } from "../../assets/index";
@@ -169,8 +169,10 @@ export const Home = ({ navigation }) => {
     <View style={{ flex: 1 }}>
       <MapView
         style={StyleSheet.absoluteFill}
-        region={region?.latitude ? region : null}
-      />
+        initialRegion={region?.latitude ? region : null}
+      >
+        {region?.latitude && <Marker coordinate={region} />}
+      </MapView>
       <SafeAreaView style={{ flex: _isLoading ? 1 : 0 }}>
         <View style={styles.container}>
           <TouchableOpacity

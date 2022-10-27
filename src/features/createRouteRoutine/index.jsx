@@ -20,7 +20,7 @@ import StepIndicator from "react-native-step-indicator";
 import routeService from "../../services/route";
 import { getDistance } from "../../utils/getDistance";
 import moment from "moment";
-import { Dialog } from "react-native-paper";
+import { ActivityIndicator, Dialog } from "react-native-paper";
 import { IMAGES } from "../../assets";
 import {
   BottomSheetModal,
@@ -70,13 +70,27 @@ export const CreateRouteRoutine = ({ navigation }) => {
   const [selectedItem, setSelectedItem] = useState(null);
   const [_listStation, _setListStation] = useState([]);
   const [indexBottomSheet, setIndexBottomSheet] = useState(1);
+  const [_loadingConfirm, _setLoadingConfirm] = useState(false);
+  const [_loadingRoute, _setLoadingRoute] = useState(false);
+  const [textWrong, setTextWrong] = useState(
+    "Ops! Route list is being updated"
+  );
   const dropdownController = useRef(null);
 
-  const handleGetRoute = async routeCode => {
+  const handleGetRoute = async (routeCode, text) => {
+    _setLoadingRoute(true);
     const res = await routeService.getRouteByCodeStation(routeCode);
     if (res && res.StatusCode === 200) {
-      _setListRoute(res.Data);
+      if (res.Data.length > 0) {
+        _setListRoute(res.Data);
+      } else {
+        _setListRoute(null);
+        setTextWrong(text);
+      }
     }
+    setTimeout(() => {
+      _setLoadingRoute(false);
+    }, 1000);
   };
 
   useEffect(() => {
@@ -93,7 +107,7 @@ export const CreateRouteRoutine = ({ navigation }) => {
         _setListStation(newListStation);
       }
     };
-    handleGetRoute();
+    handleGetRoute("", "Ops! Route list is being updated");
     handleGetStation();
   }, []);
 
@@ -114,6 +128,7 @@ export const CreateRouteRoutine = ({ navigation }) => {
   }, []);
 
   const handleConfirm = async () => {
+    _setLoadingConfirm(true);
     const res = await routeService.createRouteRoutine(
       _routeSelected.Code,
       moment(_dateFrom).format("DD-MM-YYYY"),
@@ -129,13 +144,14 @@ export const CreateRouteRoutine = ({ navigation }) => {
     } else {
       Alert.alert("Error", res?.Message);
     }
+    _setLoadingConfirm(false);
   };
 
   const handleSelectedItem = item => {
     if (item) {
       setSelectedItem(item);
       setIndexBottomSheet(1);
-      handleGetRoute(item.id);
+      handleGetRoute(item.id, "Ops! There are no routes matching station");
     }
   };
 
@@ -149,7 +165,7 @@ export const CreateRouteRoutine = ({ navigation }) => {
 
   const handleSubmit = () => {
     bottomSheetModalRef.current?.close();
-    handleGetRoute();
+    handleGetRoute("", "Ops! Route list is being updated");
   };
 
   return (
@@ -178,154 +194,179 @@ export const CreateRouteRoutine = ({ navigation }) => {
                   { display: currentPosition === 0 ? "flex" : "none" },
                 ]}
               >
-                {_listRoute ? (
-                  <FlatList
+                {_loadingRoute ? (
+                  <View
                     style={{
-                      marginTop: 10,
-                      paddingHorizontal: 15,
-                      paddingTop: 20,
+                      flex: 1,
+                      alignItems: "center",
+                      justifyContent: "center",
                     }}
-                    contentContainerStyle={{ paddingBottom: 20 }}
-                    data={_listRoute}
-                    renderItem={({ item, index }) => (
-                      <TouchableOpacity
-                        activeOpacity={0.9}
-                        style={styles.boxItemRow}
-                        onPress={() => _setRouteSelected(item)}
-                      >
-                        <View style={styles.iconRadio}>
-                          {item?.Code === _routeSelected.Code ? (
-                            <Ionicons
-                              name="radio-button-on"
-                              size={24}
-                              color={colors.primary}
-                            />
-                          ) : (
-                            <Ionicons
-                              name="radio-button-off"
-                              size={24}
-                              color={colors.gray}
-                            />
-                          )}
-                        </View>
-                        <View>
-                          <View>
-                            <View style={styles.lineAddress}>
-                              <View
-                                style={{
-                                  width: 20,
-                                  flexDirection: "row",
-                                  justifyContent: "center",
-                                }}
-                              >
-                                <FontAwesome
-                                  name="circle-o"
-                                  size={16}
+                  >
+                    <ActivityIndicator size={24} color={colors.primary} />
+                  </View>
+                ) : (
+                  <View style={{ flex: 1 }}>
+                    {_listRoute ? (
+                      <FlatList
+                        style={{
+                          marginTop: 10,
+                          paddingHorizontal: 15,
+                          paddingTop: 20,
+                        }}
+                        contentContainerStyle={{ paddingBottom: 20 }}
+                        data={_listRoute}
+                        renderItem={({ item, index }) => (
+                          <TouchableOpacity
+                            activeOpacity={0.9}
+                            style={styles.boxItemRow}
+                            onPress={() => _setRouteSelected(item)}
+                          >
+                            <View style={styles.iconRadio}>
+                              {item?.Code === _routeSelected.Code ? (
+                                <Ionicons
+                                  name="radio-button-on"
+                                  size={24}
                                   color={colors.primary}
                                 />
-                              </View>
-                              <Text
-                                numberOfLines={1}
-                                style={styles.textAddress}
-                              >
-                                {item.Stations[0].Name}
-                              </Text>
+                              ) : (
+                                <Ionicons
+                                  name="radio-button-off"
+                                  size={24}
+                                  color={colors.gray}
+                                />
+                              )}
                             </View>
-                            <View
-                              style={{
-                                height: 15,
-                                borderLeftWidth: 1,
-                                marginLeft: 8,
-                                borderColor: colors.gray,
-                                marginVertical: 3,
-                              }}
-                            ></View>
-                            <View style={styles.lineAddress}>
+                            <View>
+                              <View>
+                                <View style={styles.lineAddress}>
+                                  <View
+                                    style={{
+                                      width: 20,
+                                      flexDirection: "row",
+                                      justifyContent: "center",
+                                    }}
+                                  >
+                                    <FontAwesome
+                                      name="circle-o"
+                                      size={16}
+                                      color={colors.primary}
+                                    />
+                                  </View>
+                                  <Text
+                                    numberOfLines={1}
+                                    style={styles.textAddress}
+                                  >
+                                    {item.Stations[0].Name}
+                                  </Text>
+                                </View>
+                                <View
+                                  style={{
+                                    height: 15,
+                                    borderLeftWidth: 1,
+                                    marginLeft: 8,
+                                    borderColor: colors.gray,
+                                    marginVertical: 3,
+                                  }}
+                                ></View>
+                                <View style={styles.lineAddress}>
+                                  <View
+                                    style={{
+                                      width: 20,
+                                      flexDirection: "row",
+                                      justifyContent: "center",
+                                    }}
+                                  >
+                                    <FontAwesome
+                                      name="map-marker"
+                                      size={20}
+                                      color={colors.orange}
+                                    />
+                                  </View>
+
+                                  <Text
+                                    style={styles.textAddress}
+                                    numberOfLines={1}
+                                  >
+                                    {
+                                      item.Stations[item.Stations.length - 1]
+                                        .Name
+                                    }
+                                  </Text>
+                                </View>
+                              </View>
                               <View
                                 style={{
-                                  width: 20,
+                                  marginTop: 20,
                                   flexDirection: "row",
-                                  justifyContent: "center",
+                                  justifyContent: "space-between",
+                                  width: appTheme.WIDTH - 30 - 30 - 30,
                                 }}
                               >
-                                <FontAwesome
-                                  name="map-marker"
-                                  size={20}
-                                  color={colors.orange}
-                                />
+                                <View style={{ alignItems: "center" }}>
+                                  <FontAwesome
+                                    name="map-o"
+                                    size={14}
+                                    color={colors.text}
+                                    style={{ marginBottom: 10 }}
+                                  />
+                                  <Text>{getDistance(item.Distance)}</Text>
+                                </View>
+                                <View
+                                  style={{
+                                    height: 40,
+                                    width: 1,
+                                    backgroundColor: "#ccc",
+                                    margin: 0,
+                                  }}
+                                ></View>
+                                <View style={{ alignItems: "center" }}>
+                                  <AntDesign
+                                    name="clockcircleo"
+                                    size={16}
+                                    color="black"
+                                    style={{ marginBottom: 10 }}
+                                  />
+                                  <Text>
+                                    Estimate {Math.floor(item.Duration / 60)}{" "}
+                                    minutes
+                                  </Text>
+                                </View>
+                                <View
+                                  style={{
+                                    height: 40,
+                                    width: 1,
+                                    backgroundColor: "#ccc",
+                                    margin: 0,
+                                  }}
+                                ></View>
+                                <TouchableOpacity
+                                  style={{ alignItems: "center" }}
+                                  activeOpacity={0.7}
+                                >
+                                  <Feather
+                                    name="more-horizontal"
+                                    size={24}
+                                    color="black"
+                                  />
+                                  <Text>More</Text>
+                                </TouchableOpacity>
                               </View>
-
-                              <Text
-                                style={styles.textAddress}
-                                numberOfLines={1}
-                              >
-                                {item.Stations[item.Stations.length - 1].Name}
-                              </Text>
                             </View>
-                          </View>
-                          <View
-                            style={{
-                              marginTop: 20,
-                              flexDirection: "row",
-                              justifyContent: "space-between",
-                              width: appTheme.WIDTH - 30 - 30 - 30,
-                            }}
-                          >
-                            <View style={{ alignItems: "center" }}>
-                              <FontAwesome
-                                name="map-o"
-                                size={14}
-                                color={colors.text}
-                                style={{ marginBottom: 10 }}
-                              />
-                              <Text>{getDistance(item.Distance)}</Text>
-                            </View>
-                            <View
-                              style={{
-                                height: 40,
-                                width: 1,
-                                backgroundColor: "#ccc",
-                                margin: 0,
-                              }}
-                            ></View>
-                            <View style={{ alignItems: "center" }}>
-                              <AntDesign
-                                name="clockcircleo"
-                                size={16}
-                                color="black"
-                                style={{ marginBottom: 10 }}
-                              />
-                              <Text>
-                                Estimate {Math.floor(item.Duration / 60)}{" "}
-                                minutes
-                              </Text>
-                            </View>
-                            <View
-                              style={{
-                                height: 40,
-                                width: 1,
-                                backgroundColor: "#ccc",
-                                margin: 0,
-                              }}
-                            ></View>
-                            <TouchableOpacity
-                              style={{ alignItems: "center" }}
-                              activeOpacity={0.7}
-                            >
-                              <Feather
-                                name="more-horizontal"
-                                size={24}
-                                color="black"
-                              />
-                              <Text>More</Text>
-                            </TouchableOpacity>
-                          </View>
-                        </View>
-                      </TouchableOpacity>
+                          </TouchableOpacity>
+                        )}
+                      />
+                    ) : (
+                      <View
+                        style={{
+                          flex: 1,
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Text>{textWrong}</Text>
+                      </View>
                     )}
-                  />
-                ) : (
-                  <View style={{ flex: 1 }}></View>
+                  </View>
                 )}
                 <View style={styles.bottomControl}>
                   <View style={{ flexDirection: "row" }}>
@@ -541,6 +582,13 @@ export const CreateRouteRoutine = ({ navigation }) => {
                       onPress={() => handleConfirm()}
                     >
                       <Text style={styles.textStart}>Confirm</Text>
+                      {_loadingConfirm && (
+                        <ActivityIndicator
+                          size={24}
+                          color={colors.white}
+                          style={{ position: "absolute", right: 15 }}
+                        />
+                      )}
                     </TouchableOpacity>
                   </View>
                 </View>
