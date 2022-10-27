@@ -1,7 +1,14 @@
 import * as React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { BookingReceive, Driving, Profile, WelCome } from "../features";
+import {
+  BookingReceive,
+  CreateRouteRoutine,
+  DriverSetting,
+  Driving,
+  Profile,
+  WelCome,
+} from "../features";
 import { NotAuth } from "./not_auth";
 import { Auth } from "./auth";
 import { ChatDetail } from "../features/mailBox/ChatDetail";
@@ -49,6 +56,16 @@ function NavigatorRoot() {
         <Root.Screen
           name="Success"
           component={Success}
+          options={{ gestureEnabled: false }}
+        ></Root.Screen>
+        <Root.Screen
+          name="DriverSetting"
+          component={DriverSetting}
+          options={{ gestureEnabled: true }}
+        ></Root.Screen>
+        <Root.Screen
+          name="CreateRouteRoutine"
+          component={CreateRouteRoutine}
           options={{ gestureEnabled: false }}
         ></Root.Screen>
       </Root.Navigator>

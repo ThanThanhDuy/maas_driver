@@ -13,12 +13,15 @@
     "updates": {
       "fallbackToCacheTimeout": 0
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.thanthanhduy.ViGo-Driver"
+      "bundleIdentifier": "com.thanthanhduy.ViGo-Driver",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "The ViGo App uses your location to pick origins, destinations, and predict ride times",
+        "NSLocationAlwaysUsageDescription": "The Vigo App will use your location to provide ETA's to yourself and others",
+        "UIBackgroundModes": ["location", "fetch"]
+      }
     },
     "android": {
       "adaptiveIcon": {

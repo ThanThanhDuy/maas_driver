@@ -1,0 +1,130 @@
+import { StyleSheet } from "react-native";
+import { appTheme, colors, fontSize } from "../../constants";
+
+export const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.white,
+  },
+  wrapper: {
+    flex: 1,
+  },
+  slide1: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  slide2: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  text: {
+    color: "#fff",
+    fontSize: 30,
+    fontWeight: "bold",
+  },
+  bottomControl: { marginHorizontal: 15, marginBottom: 20, paddingTop: 20 },
+  boxFilter: {
+    borderWidth: 1,
+    borderRadius: 8,
+    backgroundColor: "#FBFCFE",
+    paddingVertical: 13,
+    paddingHorizontal: 20,
+    borderColor: colors.text,
+  },
+  boxNext: {
+    marginLeft: 10,
+    borderRadius: 8,
+    paddingVertical: 13,
+    paddingHorizontal: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    width: appTheme.WIDTH - 30 - 74 - 10,
+  },
+  textStart: {
+    color: colors.white,
+    fontFamily: "Roboto_500",
+    fontSize: fontSize.h4,
+  },
+  boxModal: {
+    margin: 0,
+    position: "absolute",
+    width: "100%",
+    top: appTheme.HEIGHT - 350,
+    height: 450,
+  },
+  boxRadio: {
+    backgroundColor: colors.white,
+    height: 250,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 0,
+    },
+    shadowOpacity: 0.3,
+    justifyContent: "space-between",
+    paddingBottom: 40,
+  },
+  buttonClose: {
+    width: 50,
+    height: 50,
+    backgroundColor: "green",
+    borderRadius: 100,
+    // position: "absolute",
+    // zIndex: 100,
+    // top: -40,
+    // right: 0,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 0,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 15,
+    elevation: 0,
+    borderRadius: 100,
+    borderWidth: 0.5,
+    borderColor: colors.gray,
+  },
+  boxItemRow: {
+    width: appTheme.WIDTH - 30,
+    backgroundColor: "#fff",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 0,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    elevation: 10,
+    borderRadius: 5,
+    marginBottom: 20,
+    flexDirection: "row",
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+  },
+  iconRadio: {
+    justifyContent: "center",
+    marginRight: 10,
+  },
+  lineAddress: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  textAddress: {
+    marginLeft: 10,
+    fontFamily: "Roboto_400",
+    fontSize: fontSize.regular,
+  },
+  textlabelSetting: {
+    marginTop: 10,
+    fontFamily: "Roboto_500",
+    color: colors.text,
+    fontSize: fontSize.h3,
+  },
+});

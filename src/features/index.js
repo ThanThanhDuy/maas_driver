@@ -7,6 +7,8 @@ import { Profile } from "./profile";
 import { Schedule } from "./schedule";
 import { BookingReceive } from "./bookingReceive";
 import { Driving } from "./driving";
+import { DriverSetting } from "./driverSetting";
+import { CreateRouteRoutine } from "./createRouteRoutine";
 
 export {
   WelCome,
@@ -18,4 +20,6 @@ export {
   Schedule,
   BookingReceive,
   Driving,
+  DriverSetting,
+  CreateRouteRoutine,
 };

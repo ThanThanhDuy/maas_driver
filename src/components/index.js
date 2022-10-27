@@ -15,6 +15,7 @@ import { BoxBooking } from "./commons/BoxBooking";
 import { WrapperContent } from "./commons/WrapperContent";
 import { StepDriving } from "./commons/StepDriving";
 import { Success } from "./commons/Success";
+import { Search } from "./commons/Search";
 
 export {
   Button,
@@ -34,4 +35,5 @@ export {
   WrapperContent,
   StepDriving,
   Success,
+  Search,
 };
