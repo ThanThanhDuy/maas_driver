@@ -1,6 +1,6 @@
 import "react-native-gesture-handler";
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, View } from "react-native";
 import {
   useFonts,
   Roboto_100Thin,
@@ -12,6 +12,8 @@ import {
 } from "@expo-google-fonts/roboto";
 import { RecoilRoot } from "recoil";
 import NavigatorRoot from "./src/navigation";
+import { LOGO } from "./src/assets";
+import { appTheme } from "./src/constants";
 
 export default function App() {
   let [fontsLoaded] = useFonts({
@@ -24,8 +26,8 @@ export default function App() {
   });
   if (!fontsLoaded) {
     return (
-      <View style={styles.container}>
-        <Text>Somthing Wrong</Text>
+      <View style={styles.containerImage}>
+        <Image style={styles.image} source={LOGO.logo} />
       </View>
     );
   } else {
@@ -46,5 +48,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     // alignItems: "center",
     // justifyContent: "center",
+  },
+  containerImage: {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    flex: 1,
+  },
+  image: {
+    width: appTheme.WIDTH,
   },
 });

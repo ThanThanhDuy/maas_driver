@@ -7,11 +7,11 @@ import {
   Alert,
 } from "react-native";
 import React, { useEffect, useState } from "react";
-import MapView from "react-native-maps";
+import MapView, { Marker } from "react-native-maps";
 import { Octicons, Ionicons } from "@expo/vector-icons";
 import { Avatar, BoxAddress } from "../../components";
 import { IMAGES } from "../../assets/index";
-import { colors, COMMONS } from "../../constants";
+import { appTheme, colors, COMMONS, fontSize } from "../../constants";
 import createStyle from "./style";
 import numberWithCommas from "../../utils/numberWithCommas";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -19,8 +19,17 @@ import { useRecoilState, useSetRecoilState } from "recoil";
 import { HubConnectionBuilder, Subject } from "@microsoft/signalr";
 import messageRoomsService from "../../services/messageRoom";
 import { ActivityIndicator } from "react-native-paper";
-import { loadMessageState, userState } from "../../store";
+import {
+  bookingSelected,
+  isUserWorking,
+  loadMessageState,
+  userState,
+} from "../../store";
 import * as Location from "expo-location";
+import { useIsFocused } from "@react-navigation/native";
+import StarRating from "react-native-star-rating-widget";
+import scheduleService from "../../services/Schedule";
+import moment from "moment";
 
 export const Home = ({ navigation }) => {
   const styles = createStyle();
@@ -31,6 +40,12 @@ export const Home = ({ navigation }) => {
   const [user, setUser] = useRecoilState(userState);
   const _setLoadMessage = useSetRecoilState(loadMessageState);
   const [subject, setSubject] = useState(undefined);
+  const [_user, _setUser] = useState(undefined);
+  const [_nextTrip, _setNextTrip] = useState(undefined);
+  const [_loadingTrip, _setLoadingTrip] = useState(false);
+  const _setBookingSelected = useSetRecoilState(bookingSelected);
+  const _setIsUserWorking = useSetRecoilState(isUserWorking);
+  const isFocused = useIsFocused();
 
   useEffect(() => {
     (async () => {
@@ -53,12 +68,33 @@ export const Home = ({ navigation }) => {
     _loadProfile();
   }, []);
 
+  useEffect(() => {
+    const handleNextTrip = async () => {
+      _setLoadingTrip(true);
+      const respone = await scheduleService.getScheduleByDate(
+        1,
+        1,
+        moment(new Date()).format("DD-MM-YYYY"),
+        moment(new Date()).format("DD-MM-YYYY")
+      );
+      if (respone.StatusCode === 200) {
+        if (respone.Data.Items[0].RouteRoutines.length > 0) {
+          _setNextTrip(respone.Data.Items[0].RouteRoutines[0]);
+        }
+      }
+      _setLoadingTrip(false);
+    };
+    handleNextTrip();
+  }, [isFocused]);
+
   const _loadProfile = async () => {
     const userStorage = await AsyncStorage.getItem("User");
+    _setUser(JSON.parse(userStorage));
     if (!user) {
       setUser(userStorage);
     }
   };
+
   const _handleWorking = async () => {
     let { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== "granted") {
@@ -117,13 +153,15 @@ export const Home = ({ navigation }) => {
         }
         setTimeout(() => {
           _setIsWorking(!_isWorking);
+          _setIsUserWorking(!_isWorking);
           _setIsLoading(false);
-        }, 0);
+        }, 1000);
       } else {
         setTimeout(() => {
           subject?.complete();
           clearInterval(myInterval);
           _setIsWorking(!_isWorking);
+          _setIsUserWorking(!_isWorking);
           _setIsLoading(false);
         }, 1000);
       }
@@ -165,19 +203,29 @@ export const Home = ({ navigation }) => {
     }
   };
 
+  const handleSelect = () => {
+    _setBookingSelected({
+      ..._nextTrip,
+      Date: moment(new Date()).format("DD-MM-YYYY"),
+    });
+    navigation.navigate("BookingReceive");
+  };
+
   return (
     <View style={{ flex: 1 }}>
       <MapView
         style={StyleSheet.absoluteFill}
-        region={region?.latitude ? region : null}
-      />
+        initialRegion={region?.latitude ? region : null}
+      >
+        {region?.latitude && <Marker coordinate={region} />}
+      </MapView>
       <SafeAreaView style={{ flex: _isLoading ? 1 : 0 }}>
         <View style={styles.container}>
           <TouchableOpacity
             activeOpacity={0.7}
             onPress={() => navigation.navigate("Profile")}
           >
-            <Avatar source={IMAGES.banner} style={styles.avatar} />
+            <Avatar source={{ uri: _user?.AvatarUrl }} style={styles.avatar} />
           </TouchableOpacity>
           <View style={styles.wrapperContent}>
             <Text style={styles.text}>
@@ -218,20 +266,41 @@ export const Home = ({ navigation }) => {
         </View>
       </SafeAreaView>
       <View style={styles.wrappJourney}>
-        <TouchableOpacity
-          activeOpacity={0.7}
-          onPress={() => navigation.navigate("BookingReceive")}
-        >
-          <BoxAddress
-            styleBox={styles.boxAddress}
-            from="Trường đại học FPT"
-            to="Trường đại học Nguyễn Tất Thành"
-          />
-        </TouchableOpacity>
+        {_loadingTrip ? (
+          <View style={styles.boxRating}>
+            <ActivityIndicator color={colors.primary} />
+          </View>
+        ) : _nextTrip ? (
+          <TouchableOpacity activeOpacity={0.7} onPress={() => handleSelect()}>
+            <BoxAddress
+              styleBox={styles.boxAddress}
+              from={_nextTrip?.Steps[0].StationName}
+              to={_nextTrip?.Steps[_nextTrip?.Steps.length - 1].StationName}
+            />
+          </TouchableOpacity>
+        ) : (
+          <View style={[styles.boxRating, { justifyContent: "space-between" }]}>
+            <StarRating
+              rating={3.5}
+              onChange={() => {}}
+              maxStars={5}
+              style={{ marginTop: 2 }}
+              starStyle={{ marginRight: -7 }}
+            />
+            <Text
+              style={{ fontFamily: "Roboto_500", fontSize: fontSize.medium }}
+            >
+              3.5/5
+            </Text>
+          </View>
+        )}
+
         <View style={{ alignItems: "flex-end", justifyContent: "center" }}>
-          <Text style={styles.textWallet}>Account wallet</Text>
+          <Text style={styles.textWallet}>Account ViWallet</Text>
           <View style={{ flexDirection: "row" }}>
-            <Text style={styles.textMoney}>{numberWithCommas(247183)}</Text>
+            <Text style={styles.textMoney}>
+              {numberWithCommas(parseFloat(_user?.Wallet?.Balance))}
+            </Text>
             <Text style={styles.vnd}>VND</Text>
           </View>
         </View>

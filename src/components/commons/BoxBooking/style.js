@@ -9,6 +9,7 @@ export const styles = StyleSheet.create({
     marginTop: 15,
     borderRadius: 8,
     padding: 20,
+    paddingBottom: 0,
     backgroundColor: "#FBFCFE",
   },
   boxLine: { flexDirection: "row", alignItems: "center" },
@@ -56,7 +57,7 @@ export const styles = StyleSheet.create({
   },
   wrapperButTime: {
     marginLeft: 10,
-    paddingHorizontal: 20,
+    paddingHorizontal: 15,
     paddingVertical: 6,
     backgroundColor: "#31B057",
     borderRadius: 100,

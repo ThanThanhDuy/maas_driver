@@ -1,4 +1,10 @@
-import { SafeAreaView, StyleSheet, View, ScrollView } from "react-native";
+import {
+  SafeAreaView,
+  StyleSheet,
+  View,
+  ScrollView,
+  Alert,
+} from "react-native";
 import React, {
   useCallback,
   useEffect,
@@ -19,6 +25,9 @@ import SwipeButton from "rn-swipe-button";
 import { StepDriving } from "../../components";
 import { ActivityIndicator } from "react-native-paper";
 import { styles } from "./style";
+import { bookingSelected } from "../../store";
+import { useRecoilValue } from "recoil";
+import tripStatusService from "../../services/tripStatus";
 
 const _stepDriving = [
   {
@@ -105,8 +114,20 @@ for (const step of _stepDriving) {
 }
 
 result = result.sort((step1, step2) => step1.index - step2.index);
-
+// {
+//   "address": "Đường D1, Tân Phú, Thành phố Thủ Đức, Thành phố Hồ Chí Minh",
+//   "index": 6,
+//   "name": "F AI InnovationHub",
+//   "position": "end",
+//   "user": Object {
+//     "ChattingRoomCode": "",
+//     "Code": "123",
+//     "Name": "Quach Dai Loi",
+//     "PhoneNumber": "1234",
+//   },
+// },
 export const Driving = ({ navigation }) => {
+  const _bookingSelected = useRecoilValue(bookingSelected);
   const [region, setRegion] = useState({
     latitude: 10.841626311529279,
     latitudeDelta: 0.01793054891924406,
@@ -123,19 +144,57 @@ export const Driving = ({ navigation }) => {
   const [_isLoadingChangeStep, _setIsLoadingChangeStep] = useState(false);
   const [_statusSwipe, _setStatusSwipe] = useState({});
 
+  const handleStep = () => {
+    let result = [];
+    let array = [];
+    for (const item of _bookingSelected.Steps) {
+      if (
+        (item.Type === 0 && item.TripStatus !== 1) ||
+        (item.Type === 1 && item.TripStatus !== 2)
+      ) {
+        array.push(item);
+      }
+    }
+    for (const [index, step] of array.entries()) {
+      let bookingDetailDriverCode = step.BookingDetailDriverCode;
+      let itemFound = _bookingSelected.Schedules.find(
+        item => item.BookingDetailDriverCode === bookingDetailDriverCode
+      );
+      let stationCode = step.StationCode;
+      // address and position
+      let StationPosition = step.Type === 0 ? "start" : "end";
+      if (itemFound["StartStation"].Code === stationCode) {
+        StationAddress = itemFound["StartStation"].Address;
+      } else {
+        StationAddress = itemFound["EndStation"].Address;
+      }
+      // phone and message room
+      let PhoneNumber = "";
+      let ChattingRoomCode = "";
+      PhoneNumber = itemFound.User.PhoneNumber;
+      ChattingRoomCode = itemFound.User.ChattingRoomCode;
+      result.push({
+        ...step,
+        StationAddress,
+        StationPosition,
+        PhoneNumber,
+        ChattingRoomCode,
+      });
+    }
+    _setListStep(result);
+    _setStatusSwipe({
+      text: `${result[0].Type === 0 ? "Pick up" : "Drop off"} ${
+        result[0].UserName
+      }`,
+      color: result[0].Type === 0 ? colors.primary : colors.orange,
+    });
+  };
+
   useEffect(() => {
     // handle data
     const handleData = async () => {
-      setTimeout(() => {
-        if (result) {
-          bottomSheetModalRef.current?.present();
-          _setListStep(result);
-          _setStatusSwipe({
-            text: `Pick up ${result[0].user.Name}`,
-            color: colors.primary,
-          });
-        }
-      }, 1000);
+      bottomSheetModalRef.current?.present();
+      handleStep();
     };
     handleData();
   }, []);
@@ -149,42 +208,58 @@ export const Driving = ({ navigation }) => {
     setRegion({ region });
   };
 
-  const handleSwipeSuccess = () => {
+  const handleSwipeSuccess = async () => {
     _setIsLoadingChangeStep(true);
     let stepTmp = [..._listStep];
     // remove step
-    stepTmp.shift();
-    // check finish
-    if (stepTmp.length > 0) {
-      setTimeout(() => {
-        _setListStep(stepTmp.length > 0 ? stepTmp : []);
-        let statusSwipe = {};
-        if (stepTmp[0].position === "start") {
-          statusSwipe = {
-            text: `Pick up ${stepTmp[0].user.Name}`,
-            color: colors.primary,
-          };
+    let itemDeleted = stepTmp[0];
+    if (itemDeleted) {
+      let tripStatus;
+      if (itemDeleted.StationPosition === "start") {
+        tripStatus = 1;
+      } else {
+        tripStatus = 2;
+      }
+      console.log(itemDeleted.BookingDetailDriverCode, tripStatus);
+      const res = await tripStatusService.updateTripStatus(
+        itemDeleted.BookingDetailDriverCode,
+        tripStatus
+      );
+      console.log(res);
+      if (res.StatusCode === 200) {
+        stepTmp.shift();
+        if (stepTmp.length > 0) {
+          let statusSwipe = {};
+          if (stepTmp[0].StationPosition === "start") {
+            statusSwipe = {
+              text: `Pick up ${stepTmp[0].UserName}`,
+              color: colors.primary,
+            };
+          } else {
+            statusSwipe = {
+              text: `Drop off ${stepTmp[0].UserName}`,
+              color: colors.orange,
+            };
+          }
+          _setStatusSwipe(statusSwipe);
+          _setListStep(stepTmp.length > 0 ? stepTmp : []);
+          _setIsLoadingChangeStep(false);
+          forceResetLastButton && forceResetLastButton();
         } else {
-          statusSwipe = {
-            text: `Drop off ${stepTmp[0].user.Name}`,
-            color: colors.orange,
-          };
+          navigation.navigate("Success");
+          _setStatusSwipe({
+            text: `Finish`,
+            color: colors.primary,
+          });
+          _setListStep(stepTmp.length > 0 ? stepTmp : []);
+          _setIsLoadingChangeStep(false);
+          forceResetLastButton && forceResetLastButton();
         }
-        _setStatusSwipe(statusSwipe);
-        forceResetLastButton && forceResetLastButton();
+      } else {
         _setIsLoadingChangeStep(false);
-      }, 1000);
-    } else {
-      _setListStep(stepTmp.length > 0 ? stepTmp : []);
-      setTimeout(() => {
-        navigation.navigate("Success");
-        _setStatusSwipe({
-          text: `Finish`,
-          color: colors.primary,
-        });
         forceResetLastButton && forceResetLastButton();
-        _setIsLoadingChangeStep(false);
-      }, 1000);
+        Alert.alert("Error", "Ops! Something went wrong");
+      }
     }
   };
 

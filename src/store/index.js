@@ -4,7 +4,7 @@ import {
   loadMessageState,
 } from "./messageState";
 import { bookingSelected } from "./booking";
-import { userState } from "./user";
+import { userState, isUserWorking } from "./user";
 
 export {
   messageState,
@@ -12,4 +12,5 @@ export {
   bookingSelected,
   userState,
   loadMessageState,
+  isUserWorking,
 };

@@ -6,13 +6,21 @@ import { getDistance } from "../../../utils/getDistance";
 import { getHour } from "../../../utils/getDate";
 import { styles } from "./style";
 
-export const BoxBooking = ({ item, index }) => {
+export const BoxBooking = ({ item, index, navigation, _startButton }) => {
   const callNumber = phone => {
     if (phone) {
       let phoneNumber = `tel:${phone}`;
       Linking.openURL(phoneNumber);
     }
   };
+
+  const handleChat = roomChatCode => {
+    navigation.navigate("ChatDetail", {
+      roomCode: roomChatCode,
+      roomType: 1,
+    });
+  };
+
   return (
     <View key={index} style={styles.container}>
       <View style={styles.boxLine}>
@@ -68,25 +76,31 @@ export const BoxBooking = ({ item, index }) => {
       <View style={styles.boxUser}>
         <View>
           <Text style={[styles.textTitle, { marginLeft: 0 }]}>
-            {item.Users[0].Name}
+            {item.User.Name}
           </Text>
         </View>
-        <View style={styles.boxLine}>
-          <TouchableOpacity
-            onPress={() => callNumber(item.Users[0].PhoneNumber)}
-            activeOpacity={0.7}
-            style={styles.boxPhone}
-          >
-            <FontAwesome5 name="phone-alt" size={18} color={colors.primary} />
-          </TouchableOpacity>
-          <TouchableOpacity activeOpacity={0.7} style={{ borderRadius: 100 }}>
-            <Ionicons
-              name="chatbox-ellipses"
-              size={24}
-              color={colors.primary}
-            />
-          </TouchableOpacity>
-        </View>
+        {_startButton && (
+          <View style={styles.boxLine}>
+            <TouchableOpacity
+              onPress={() => callNumber(item.User.PhoneNumber)}
+              activeOpacity={0.7}
+              style={styles.boxPhone}
+            >
+              <FontAwesome5 name="phone-alt" size={18} color={colors.primary} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              style={{ borderRadius: 100 }}
+              onPress={() => handleChat(item.User.ChattingRoomCode)}
+            >
+              <Ionicons
+                name="chatbox-ellipses"
+                size={24}
+                color={colors.primary}
+              />
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
       {/* payment */}
       <View style={styles.boxPayment}>

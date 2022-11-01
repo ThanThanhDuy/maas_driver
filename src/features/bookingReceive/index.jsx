@@ -6,9 +6,10 @@ import {
   TouchableOpacity,
   ScrollView,
   Linking,
-  StyleSheet,
+  RefreshControl,
+  Alert,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { vehicle } from "../../constants/vehicle";
 import { appTheme, colors, fontSize } from "../../constants";
 import { Ionicons } from "@expo/vector-icons";
@@ -21,6 +22,8 @@ import { ArrowButton } from "../../components/commons/ArrowButton";
 import RadioGroup from "react-native-radio-buttons-group";
 import { getDistanceArray } from "../../utils/getDistance";
 import { styles } from "./style";
+import { compareTime } from "../../utils/compareTime";
+import { isUserWorking } from "../../store";
 
 const radioButtonsData = [
   {
@@ -63,8 +66,29 @@ const radioButtonsData = [
 
 export const BookingReceive = ({ navigation }) => {
   const _bookingSelected = useRecoilValue(bookingSelected);
+  const isUserWorkingState = useRecoilValue(isUserWorking);
   const [_openModal, _setOpenModal] = useState(false);
   const [radioButtons, setRadioButtons] = useState(radioButtonsData);
+  const [_startButton, _setStartButton] = useState(false);
+  const [_refreshing, _setRefreshing] = useState(false);
+
+  const compareTimeStart = () => {
+    _setRefreshing(true);
+    const minutes = compareTime(
+      _bookingSelected.Date,
+      _bookingSelected.Schedules[0].Time
+    );
+    setTimeout(() => {
+      _setRefreshing(false);
+    }, 1000);
+    if (minutes <= 60 && minutes > 0) {
+      _setStartButton(true);
+    }
+  };
+
+  useEffect(() => {
+    compareTimeStart();
+  }, []);
 
   function onPressRadioButton(radioButtonsArray) {
     console.log(radioButtonsArray);
@@ -82,6 +106,24 @@ export const BookingReceive = ({ navigation }) => {
     _setOpenModal(true);
   };
 
+  const onRefresh = () => {
+    compareTimeStart();
+  };
+
+  const handleStart = () => {
+    if (_startButton && isUserWorkingState) {
+      navigation.navigate("Driving");
+    } else {
+      Alert.alert("Can't start trip", "Please turn on the active status", [
+        {
+          text: "Back Home",
+          onPress: () => navigation.navigate("Home"),
+        },
+        { text: "OK", onPress: () => {} },
+      ]);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View
@@ -97,9 +139,20 @@ export const BookingReceive = ({ navigation }) => {
           <Text style={styles.textVehicle}>ViBike</Text>
         </View>
 
-        <ScrollView style={styles.scrollView}>
+        <ScrollView
+          style={styles.scrollView}
+          refreshControl={
+            <RefreshControl refreshing={_refreshing} onRefresh={onRefresh} />
+          }
+        >
           {_bookingSelected?.Schedules.map((item, index) => (
-            <BoxBooking item={item} index={index} key={index} />
+            <BoxBooking
+              item={item}
+              index={index}
+              key={index}
+              navigation={navigation}
+              _startButton={_startButton}
+            />
           ))}
 
           {/* Distance */}
@@ -108,7 +161,7 @@ export const BookingReceive = ({ navigation }) => {
             label="Total Distance"
           />
           {/* money */}
-          <WrapperContent
+          {/* <WrapperContent
             label="Total"
             text={
               numberWithCommas(
@@ -118,9 +171,9 @@ export const BookingReceive = ({ navigation }) => {
                 )
               ) + " VND"
             }
-          />
+          /> */}
           {/* total Income */}
-          <WrapperContent
+          {/* <WrapperContent
             label="Total Income"
             text={
               numberWithCommas(
@@ -135,7 +188,7 @@ export const BookingReceive = ({ navigation }) => {
                     (20 / 100)
               ) + " VND"
             }
-          />
+          /> */}
         </ScrollView>
       </View>
 
@@ -150,10 +203,20 @@ export const BookingReceive = ({ navigation }) => {
           </TouchableOpacity>
           <TouchableOpacity
             activeOpacity={0.6}
-            style={styles.boxStart}
-            onPress={() => navigation.navigate("Driving")}
+            style={[
+              styles.boxStart,
+              {
+                backgroundColor:
+                  _startButton && isUserWorkingState ? colors.primary : "#ccc",
+              },
+            ]}
+            onPress={() => handleStart()}
           >
-            <Text style={styles.textStart}>Start</Text>
+            <Text style={styles.textStart}>
+              {_bookingSelected.Schedules[0].TripStatus === 0
+                ? "Start"
+                : "Continue"}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>

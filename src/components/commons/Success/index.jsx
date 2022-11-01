@@ -32,7 +32,7 @@ export const Success = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <Image source={IMAGES.success} />
-      <Text style={styles.title}>Journey completed</Text>
+      <Text style={styles.title}>Trip completed</Text>
 
       <Button
         width={250}
@@ -43,6 +43,7 @@ export const Success = ({ navigation }) => {
           <AntDesign name="arrowleft" size={24} color={colors.primary} />
         }
         onPress={() => {
+          _setTabSelected("Home");
           navigation.navigate("Auth", {
             screen: "Home",
           });

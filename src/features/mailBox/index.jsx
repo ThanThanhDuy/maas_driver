@@ -10,6 +10,7 @@ import messageRoomsService from "../../services/messageRoom";
 import { ActivityIndicator } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { loadMessageState } from "../../store";
+import { useIsFocused } from "@react-navigation/native";
 
 export const MailBox = ({ navigation }) => {
   const [_isNoChat, _setIsNoChat] = useState(null);
@@ -18,6 +19,8 @@ export const MailBox = ({ navigation }) => {
   const [_listChatAll, _setListChatAll] = useState([]);
 
   const loadMessage = useRecoilValue(loadMessageState);
+
+  const isFocused = useIsFocused();
 
   const handleMessage = async response => {
     if (response && response.StatusCode === 200 && response?.Data) {
@@ -66,7 +69,7 @@ export const MailBox = ({ navigation }) => {
       const response = await messageRoomsService.getMessageRooms();
       handleMessage(response);
     })();
-  }, [loadMessage]);
+  }, [loadMessage, isFocused]);
 
   const _handleSelectChatBox = (roomType, roomCode) => {
     navigation.navigate("ChatDetail", {
