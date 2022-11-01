@@ -1,4 +1,10 @@
-import { SafeAreaView, StyleSheet, View, ScrollView } from "react-native";
+import {
+  SafeAreaView,
+  StyleSheet,
+  View,
+  ScrollView,
+  Alert,
+} from "react-native";
 import React, {
   useCallback,
   useEffect,
@@ -140,7 +146,15 @@ export const Driving = ({ navigation }) => {
 
   const handleStep = () => {
     let result = [];
-    let array = _bookingSelected.Steps;
+    let array = [];
+    for (const item of _bookingSelected.Steps) {
+      if (
+        (item.Type === 0 && item.TripStatus !== 1) ||
+        (item.Type === 1 && item.TripStatus !== 2)
+      ) {
+        array.push(item);
+      }
+    }
     for (const [index, step] of array.entries()) {
       let bookingDetailDriverCode = step.BookingDetailDriverCode;
       let itemFound = _bookingSelected.Schedules.find(
@@ -148,13 +162,11 @@ export const Driving = ({ navigation }) => {
       );
       let stationCode = step.StationCode;
       // address and position
-      let StationAddress = "";
-      let StationPosition = "start";
+      let StationPosition = step.Type === 0 ? "start" : "end";
       if (itemFound["StartStation"].Code === stationCode) {
         StationAddress = itemFound["StartStation"].Address;
       } else {
         StationAddress = itemFound["EndStation"].Address;
-        StationPosition = "end";
       }
       // phone and message room
       let PhoneNumber = "";
@@ -171,8 +183,10 @@ export const Driving = ({ navigation }) => {
     }
     _setListStep(result);
     _setStatusSwipe({
-      text: `Pick up ${result[0].UserName}`,
-      color: colors.primary,
+      text: `${result[0].Type === 0 ? "Pick up" : "Drop off"} ${
+        result[0].UserName
+      }`,
+      color: result[0].Type === 0 ? colors.primary : colors.orange,
     });
   };
 
@@ -206,6 +220,7 @@ export const Driving = ({ navigation }) => {
       } else {
         tripStatus = 2;
       }
+      console.log(itemDeleted.BookingDetailDriverCode, tripStatus);
       const res = await tripStatusService.updateTripStatus(
         itemDeleted.BookingDetailDriverCode,
         tripStatus
@@ -213,54 +228,37 @@ export const Driving = ({ navigation }) => {
       console.log(res);
       if (res.StatusCode === 200) {
         stepTmp.shift();
-      }
-    }
-    // check finish
-    if (stepTmp.length > 0) {
-      _setListStep(stepTmp.length > 0 ? stepTmp : []);
-      let statusSwipe = {};
-      if (stepTmp[0].StationPosition === "start") {
-        statusSwipe = {
-          text: `Pick up ${stepTmp[0].UserName}`,
-          color: colors.primary,
-        };
-      } else {
-        statusSwipe = {
-          text: `Drop off ${stepTmp[0].UserName}`,
-          color: colors.orange,
-        };
-      }
-      _setStatusSwipe(statusSwipe);
-      forceResetLastButton && forceResetLastButton();
-      _setIsLoadingChangeStep(false);
-    } else {
-      _setListStep(stepTmp.length > 0 ? stepTmp : []);
-      let tripStatus = 3;
-      let count = 0;
-      for (const item of _bookingSelected.Schedules) {
-        const res = await tripStatusService.updateTripStatus(
-          item.BookingDetailDriverCode,
-          tripStatus
-        );
-        if (res.StatusCode === 200) {
-          count++;
+        if (stepTmp.length > 0) {
+          let statusSwipe = {};
+          if (stepTmp[0].StationPosition === "start") {
+            statusSwipe = {
+              text: `Pick up ${stepTmp[0].UserName}`,
+              color: colors.primary,
+            };
+          } else {
+            statusSwipe = {
+              text: `Drop off ${stepTmp[0].UserName}`,
+              color: colors.orange,
+            };
+          }
+          _setStatusSwipe(statusSwipe);
+          _setListStep(stepTmp.length > 0 ? stepTmp : []);
+          _setIsLoadingChangeStep(false);
+          forceResetLastButton && forceResetLastButton();
+        } else {
+          navigation.navigate("Success");
+          _setStatusSwipe({
+            text: `Finish`,
+            color: colors.primary,
+          });
+          _setListStep(stepTmp.length > 0 ? stepTmp : []);
+          _setIsLoadingChangeStep(false);
+          forceResetLastButton && forceResetLastButton();
         }
-      }
-      if (count === _bookingSelected.Schedules.length) {
-        navigation.navigate("Success");
-        _setStatusSwipe({
-          text: `Finish`,
-          color: colors.primary,
-        });
-        forceResetLastButton && forceResetLastButton();
-        _setIsLoadingChangeStep(false);
       } else {
-        _setStatusSwipe({
-          text: `Something wrong`,
-          color: colors.red,
-        });
-        forceResetLastButton && forceResetLastButton();
         _setIsLoadingChangeStep(false);
+        forceResetLastButton && forceResetLastButton();
+        Alert.alert("Error", "Ops! Something went wrong");
       }
     }
   };

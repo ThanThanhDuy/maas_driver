@@ -33,6 +33,11 @@
 	</array>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>tel</string>
+		<string>telprompt</string>
+	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSAppTransportSecurity</key>
@@ -49,7 +54,11 @@
 		</dict>
 	</dict>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>Your geolocation string</string>
+	<string>Allow $(PRODUCT_NAME) to use your location</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Allow $(PRODUCT_NAME) to use your location</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Allow $(PRODUCT_NAME) to use your location</string>
 	<key>UILaunchStoryboardName</key>
 	<string>SplashScreen</string>
 	<key>UIRequiredDeviceCapabilities</key>
@@ -76,16 +85,5 @@
 	<string>Light</string>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
-	<key>LSApplicationQueriesSchemes</key> 
-	<array> 
-  	<string>tel</string> 
-  	<string>telprompt</string> 
-	</array>
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-		<string>Allow $(PRODUCT_NAME) to use your location</string>
-		<key>NSLocationAlwaysUsageDescription</key>
-		<string>Allow $(PRODUCT_NAME) to use your location</string>
-		<key>NSLocationWhenInUseUsageDescription</key>
-		<string>Allow $(PRODUCT_NAME) to use your location</string>
 </dict>
 </plist>

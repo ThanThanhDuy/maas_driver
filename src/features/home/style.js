@@ -86,6 +86,25 @@ function createStyle() {
       marginLeft: 3,
       color: colors.text,
     },
+    boxRating: {
+      backgroundColor: "#fff",
+      shadowColor: "#000",
+      shadowOffset: {
+        width: 0,
+        height: 0,
+      },
+      shadowOpacity: 0.2,
+      shadowRadius: 15,
+      elevation: 0,
+      height: 60,
+      width: appTheme.WIDTH - 150,
+      borderRadius: 15,
+      marginTop: 10,
+      alignItems: "center",
+      padding: 10,
+      justifyContent: "center",
+      flexDirection: "row",
+    },
   });
   return styles;
 }

@@ -60,9 +60,11 @@ export const CreateRouteRoutine = ({ navigation }) => {
   const [_openModal, _setOpenModal] = useState(false);
   const [_isShow, _setIsShow] = useState(false);
   const [_routeSelected, _setRouteSelected] = useState({});
-  const [_dateFrom, _setDateFrom] = useState(new Date());
+  const [_dateFrom, _setDateFrom] = useState(
+    moment(new Date()).add(1, "days").toDate()
+  );
   const [_dateTo, _setDateTo] = useState(
-    moment(new Date()).add(7, "days").toDate()
+    moment(new Date()).add(8, "days").toDate()
   );
   const [_time, _setTime] = useState(new Date());
   const bottomSheetModalRef = useRef(null);
@@ -133,7 +135,13 @@ export const CreateRouteRoutine = ({ navigation }) => {
       _routeSelected.Code,
       moment(_dateFrom).format("DD-MM-YYYY"),
       moment(_dateTo).format("DD-MM-YYYY"),
-      moment(_time).format("HH:mm:ss")
+      moment(_time).format("HH:mm") + ":00"
+    );
+    console.log(
+      _routeSelected.Code,
+      moment(_dateFrom).format("DD-MM-YYYY"),
+      moment(_dateTo).format("DD-MM-YYYY"),
+      moment(_time).format("HH:mm") + ":00"
     );
     if (res && res.StatusCode === 200) {
       _setIsShow(true);

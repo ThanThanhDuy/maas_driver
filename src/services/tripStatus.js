@@ -8,7 +8,6 @@ class TripStatusService {
         TripStatus: status,
       };
       var response = await tripStatusApi.updateTripStatus(params);
-      console.log(response);
     } catch (error) {
       return error;
     }

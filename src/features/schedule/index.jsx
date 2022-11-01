@@ -5,17 +5,44 @@ import { colors } from "../../constants";
 import scheduleService from "../../services/Schedule";
 import moment from "moment";
 import { AntDesign } from "@expo/vector-icons";
+import { useIsFocused } from "@react-navigation/native";
+import { useSetRecoilState } from "recoil";
+import { tabSelected } from "../../store/navigation";
 
 export const Schedule = ({ navigation }) => {
-  const [_listSchedule, _setListSchedule] = useState(null);
+  const [_listSchedule, _setListSchedule] = useState([]);
   const [_page, _setPage] = useState(1);
   const [_totalCountPage, _setTotalCountPage] = useState(1);
-  const [_isLoading, _setIsLoading] = useState(true);
+  const [_isLoading, _setIsLoading] = useState(false);
   const [_checkChangeTime, _setCheckChangeTime] = useState(true);
   const [_dateFrom, _setDateFrom] = useState(new Date());
   const [_dateTo, _setDateTo] = useState(
     moment(new Date()).add(14, "days").toDate()
   );
+  const isFocused = useIsFocused();
+  const _setTabSelected = useSetRecoilState(tabSelected);
+  const [_refreshing, _setRefreshing] = useState(false);
+
+  useEffect(() => {
+    const getSchedule = async () => {
+      _setRefreshing(true);
+      const respone = await scheduleService.getScheduleByDate(
+        1,
+        5,
+        moment(_dateFrom).format("DD-MM-YYYY"),
+        moment(_dateTo).format("DD-MM-YYYY")
+      );
+      if (respone.Data && respone.Data.Items && respone.Data.Items.length > 0) {
+        _setListSchedule(respone?.Data.Items);
+        _setTotalCountPage(respone?.Data.TotalPagesCount);
+      }
+      _setRefreshing(false);
+      _setIsLoading(false);
+      _setPage(1);
+      _setCheckChangeTime(false);
+    };
+    getSchedule();
+  }, [isFocused]);
 
   useEffect(() => {
     const getSchedule = async () => {
@@ -27,13 +54,14 @@ export const Schedule = ({ navigation }) => {
           moment(_dateFrom).format("DD-MM-YYYY"),
           moment(_dateTo).format("DD-MM-YYYY")
         );
+
         if (
           respone.Data &&
           respone.Data.Items &&
           respone.Data.Items.length > 0
         ) {
           _setListSchedule(
-            _listSchedule === null
+            _listSchedule.length === 0
               ? [].concat(respone?.Data.Items)
               : _listSchedule.concat(respone?.Data.Items)
           );
@@ -45,29 +73,50 @@ export const Schedule = ({ navigation }) => {
     getSchedule();
   }, [_page]);
 
+  const getSchedule = async () => {
+    _setIsLoading(true);
+    _setCheckChangeTime(false);
+    _setPage(1);
+    _setRefreshing(true);
+    const respone = await scheduleService.getScheduleByDate(
+      1,
+      5,
+      moment(_dateFrom).format("DD-MM-YYYY"),
+      moment(_dateTo).format("DD-MM-YYYY")
+    );
+    _setRefreshing(false);
+    if (respone.Data && respone.Data.Items && respone.Data.Items.length > 0) {
+      _setListSchedule(respone?.Data.Items);
+      _setTotalCountPage(respone?.Data.TotalPagesCount);
+      _setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const getSchedule = async () => {
-      _setIsLoading(true);
-      _setCheckChangeTime(false);
-      _setPage(1);
-      const respone = await scheduleService.getScheduleByDate(
-        1,
-        5,
-        moment(_dateFrom).format("DD-MM-YYYY"),
-        moment(_dateTo).format("DD-MM-YYYY")
-      );
-      if (respone.Data && respone.Data.Items && respone.Data.Items.length > 0) {
-        _setListSchedule(respone?.Data.Items);
-        _setTotalCountPage(respone?.Data.TotalPagesCount);
-        _setIsLoading(false);
-      }
-    };
+    isFocused && _setTabSelected("Schedule");
     getSchedule();
   }, [_dateFrom, _dateTo]);
 
   const handleLoadMore = () => {
     _setCheckChangeTime(true);
     _setPage(_page + 1);
+  };
+
+  const onRefresh = async () => {
+    _setRefreshing(true);
+    _setCheckChangeTime(false);
+    _setPage(1);
+    const respone = await scheduleService.getScheduleByDate(
+      1,
+      5,
+      moment(_dateFrom).format("DD-MM-YYYY"),
+      moment(_dateTo).format("DD-MM-YYYY")
+    );
+    if (respone.Data && respone.Data.Items && respone.Data.Items.length > 0) {
+      _setListSchedule(respone?.Data.Items);
+      _setTotalCountPage(respone?.Data.TotalPagesCount);
+      _setRefreshing(false);
+    }
   };
 
   return (
@@ -122,6 +171,8 @@ export const Schedule = ({ navigation }) => {
             navigation={navigation}
             handleLoadMore={handleLoadMore}
             _isLoading={_isLoading}
+            _refreshing={_refreshing}
+            onRefresh={onRefresh}
           />
         </View>
       )}
