@@ -27,7 +27,7 @@ export const Profile = ({ navigation }) => {
       <View style={styles.container}>
         <SafeAreaView>
           <HeaderBack
-            title="Account"
+            title="Home"
             style={{ color: colors.white }}
             iconColor={colors.white}
             navigation={navigation}

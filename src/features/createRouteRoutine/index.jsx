@@ -28,6 +28,8 @@ import {
 } from "@gorhom/bottom-sheet";
 import { AutocompleteDropdown } from "react-native-autocomplete-dropdown";
 import stationService from "../../services/station";
+import { useSetRecoilState } from "recoil";
+import { routeSelected } from "../../store";
 
 const labels = ["Choose route", "Setting"];
 const customStyles = {
@@ -78,6 +80,7 @@ export const CreateRouteRoutine = ({ navigation }) => {
     "Ops! Route list is being updated"
   );
   const dropdownController = useRef(null);
+  const _setRouteSelectedState = useSetRecoilState(routeSelected);
 
   const handleGetRoute = async (routeCode, text) => {
     _setLoadingRoute(true);
@@ -174,6 +177,13 @@ export const CreateRouteRoutine = ({ navigation }) => {
   const handleSubmit = () => {
     bottomSheetModalRef.current?.close();
     handleGetRoute("", "Ops! Route list is being updated");
+  };
+
+  const handleViewDetail = item => {
+    _setRouteSelectedState(item);
+    navigation.navigate("DetailRoute", {
+      fromScreen: "Choose route",
+    });
   };
 
   return (
@@ -350,13 +360,14 @@ export const CreateRouteRoutine = ({ navigation }) => {
                                 <TouchableOpacity
                                   style={{ alignItems: "center" }}
                                   activeOpacity={0.7}
+                                  onPress={() => handleViewDetail(item)}
                                 >
                                   <Feather
                                     name="more-horizontal"
                                     size={24}
                                     color="black"
                                   />
-                                  <Text>More</Text>
+                                  <Text>View</Text>
                                 </TouchableOpacity>
                               </View>
                             </View>

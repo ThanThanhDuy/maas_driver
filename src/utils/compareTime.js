@@ -9,3 +9,10 @@ export function compareTime(date, time) {
   );
   return duration.asMinutes();
 }
+
+export function compareDate(date) {
+  return moment(moment(new Date()).format("DD-MM-YYYY"), "DD-MM-YYYY").diff(
+    moment(date, "DD-MM-YYYY"),
+    "days"
+  );
+}

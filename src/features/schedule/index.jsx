@@ -1,4 +1,4 @@
-import { View, SafeAreaView } from "react-native";
+import { View, SafeAreaView, Text } from "react-native";
 import React, { useEffect, useState } from "react";
 import { Agenda, Dropdown, Title } from "../../components";
 import { colors } from "../../constants";
@@ -22,6 +22,7 @@ export const Schedule = ({ navigation }) => {
   const isFocused = useIsFocused();
   const _setTabSelected = useSetRecoilState(tabSelected);
   const [_refreshing, _setRefreshing] = useState(false);
+  const [_haveData, _setHaveData] = useState(true);
 
   useEffect(() => {
     const getSchedule = async () => {
@@ -35,6 +36,9 @@ export const Schedule = ({ navigation }) => {
       if (respone.Data && respone.Data.Items && respone.Data.Items.length > 0) {
         _setListSchedule(respone?.Data.Items);
         _setTotalCountPage(respone?.Data.TotalPagesCount);
+        _setHaveData(true);
+      } else {
+        _setHaveData(false);
       }
       _setRefreshing(false);
       _setIsLoading(false);
@@ -67,34 +71,43 @@ export const Schedule = ({ navigation }) => {
           );
           _setTotalCountPage(respone?.Data.TotalPagesCount);
           _setIsLoading(false);
+          _setHaveData(true);
+        } else {
+          _setHaveData(false);
         }
       }
     };
     getSchedule();
   }, [_page]);
 
-  const getSchedule = async () => {
-    _setIsLoading(true);
-    _setCheckChangeTime(false);
-    _setPage(1);
-    _setRefreshing(true);
-    const respone = await scheduleService.getScheduleByDate(
-      1,
-      5,
-      moment(_dateFrom).format("DD-MM-YYYY"),
-      moment(_dateTo).format("DD-MM-YYYY")
-    );
-    _setRefreshing(false);
-    if (respone.Data && respone.Data.Items && respone.Data.Items.length > 0) {
-      _setListSchedule(respone?.Data.Items);
-      _setTotalCountPage(respone?.Data.TotalPagesCount);
-      _setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
     isFocused && _setTabSelected("Schedule");
-    getSchedule();
+    const getScheduleTime = async () => {
+      _setIsLoading(true);
+      _setCheckChangeTime(false);
+      _setPage(1);
+      _setRefreshing(true);
+      console.log(
+        moment(_dateFrom).format("DD-MM-YYYY"),
+        moment(_dateTo).format("DD-MM-YYYY")
+      );
+      const respone = await scheduleService.getScheduleByDate(
+        1,
+        5,
+        moment(_dateFrom).format("DD-MM-YYYY"),
+        moment(_dateTo).format("DD-MM-YYYY")
+      );
+      _setRefreshing(false);
+      if (respone.Data && respone.Data.Items && respone.Data.Items.length > 0) {
+        _setListSchedule(respone?.Data.Items);
+        _setTotalCountPage(respone?.Data.TotalPagesCount);
+        _setIsLoading(false);
+        _setHaveData(true);
+      } else {
+        _setHaveData(false);
+      }
+    };
+    getScheduleTime();
   }, [_dateFrom, _dateTo]);
 
   const handleLoadMore = () => {
@@ -116,6 +129,9 @@ export const Schedule = ({ navigation }) => {
       _setListSchedule(respone?.Data.Items);
       _setTotalCountPage(respone?.Data.TotalPagesCount);
       _setRefreshing(false);
+      _setHaveData(true);
+    } else {
+      _setHaveData(false);
     }
   };
 
@@ -143,6 +159,9 @@ export const Schedule = ({ navigation }) => {
           mode="date"
           date={_dateFrom}
           onDoneValue={date => {
+            if (moment(date).isSameOrAfter(moment(_dateTo), "day")) {
+              _setDateTo(moment(date).add(14, "days").toDate());
+            }
             _setDateFrom(date);
           }}
           IconFront={
@@ -163,7 +182,7 @@ export const Schedule = ({ navigation }) => {
           styleBox={{ backgroundColor: colors.transparent, width: 160 }}
         />
       </View>
-      {_listSchedule && (
+      {_listSchedule && _haveData ? (
         <View>
           {/* list schedule */}
           <Agenda
@@ -174,6 +193,12 @@ export const Schedule = ({ navigation }) => {
             _refreshing={_refreshing}
             onRefresh={onRefresh}
           />
+        </View>
+      ) : (
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
+          <Text>Ops! Looks like you don't have any trips during this time</Text>
         </View>
       )}
     </SafeAreaView>

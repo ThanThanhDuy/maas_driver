@@ -13,6 +13,17 @@ class TripStatusService {
     }
     return response;
   }
+  async startTrip(listBookingDetailDriverCode) {
+    try {
+      let params = {
+        BookingDetailDriverCodes: listBookingDetailDriverCode,
+      };
+      var response = await tripStatusApi.startTrip(params);
+    } catch (error) {
+      return error;
+    }
+    return response;
+  }
 }
 
 const tripStatusService = new TripStatusService();

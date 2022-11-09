@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import {
   BookingReceive,
   CreateRouteRoutine,
+  DetailRoute,
   DriverSetting,
   Driving,
   Profile,
@@ -66,6 +67,11 @@ function NavigatorRoot() {
         <Root.Screen
           name="CreateRouteRoutine"
           component={CreateRouteRoutine}
+          options={{ gestureEnabled: false }}
+        ></Root.Screen>
+        <Root.Screen
+          name="DetailRoute"
+          component={DetailRoute}
           options={{ gestureEnabled: false }}
         ></Root.Screen>
       </Root.Navigator>

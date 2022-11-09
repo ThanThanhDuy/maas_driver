@@ -5,6 +5,7 @@ import {
 } from "./messageState";
 import { bookingSelected } from "./booking";
 import { userState, isUserWorking } from "./user";
+import { routeSelected } from "./route";
 
 export {
   messageState,
@@ -13,4 +14,5 @@ export {
   userState,
   loadMessageState,
   isUserWorking,
+  routeSelected,
 };

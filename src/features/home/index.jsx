@@ -19,6 +19,7 @@ import { useRecoilState, useSetRecoilState } from "recoil";
 import { HubConnectionBuilder, Subject } from "@microsoft/signalr";
 import messageRoomsService from "../../services/messageRoom";
 import { ActivityIndicator } from "react-native-paper";
+
 import {
   bookingSelected,
   isUserWorking,
@@ -78,7 +79,7 @@ export const Home = ({ navigation }) => {
         moment(new Date()).format("DD-MM-YYYY")
       );
       if (respone.StatusCode === 200) {
-        if (respone.Data.Items[0].RouteRoutines.length > 0) {
+        if (respone?.Data?.Items[0]?.RouteRoutines.length > 0) {
           _setNextTrip(respone.Data.Items[0].RouteRoutines[0]);
         }
       }
@@ -188,10 +189,11 @@ export const Home = ({ navigation }) => {
         await newConnection.invoke("Login");
 
         newConnection.on("Connected", mess => {
-          console.log("Connected: ", mess);
+          console.log("Connected chat: ", mess);
         });
 
         newConnection.on("Message", async mess => {
+          console.log("receive mess");
           const response = await messageRoomsService.getMessageRooms();
           _setLoadMessage(response?.Data);
         });
@@ -216,8 +218,9 @@ export const Home = ({ navigation }) => {
       <MapView
         style={StyleSheet.absoluteFill}
         initialRegion={region?.latitude ? region : null}
+        showsUserLocation={true}
       >
-        {region?.latitude && <Marker coordinate={region} />}
+        {/* {region?.latitude && <Marker coordinate={region} />} */}
       </MapView>
       <SafeAreaView style={{ flex: _isLoading ? 1 : 0 }}>
         <View style={styles.container}>
