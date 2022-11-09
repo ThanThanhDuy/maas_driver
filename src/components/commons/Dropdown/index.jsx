@@ -6,6 +6,7 @@ import { Entypo } from "@expo/vector-icons";
 import React, { useState } from "react";
 import createStyle from "./style";
 import { colors } from "../../../constants/index";
+import { FORMAT } from "../../../constants/format";
 
 export const Dropdown = props => {
   const {
@@ -102,7 +103,7 @@ export const Dropdown = props => {
           {mode === "time" && (
             <>
               <Text style={styles.textTime}>
-                {moment(date).format("hh:mm A")}
+                {moment(date).format("HH:mm")}:00
               </Text>
               <DatePicker
                 modal={true}
@@ -123,7 +124,7 @@ export const Dropdown = props => {
           {mode === "date" && (
             <>
               <Text style={styles.textTime}>
-                {moment(date).format("MM/DD/YYYY")}
+                {moment(date).format(FORMAT.DATE)}
               </Text>
               <DatePicker
                 modal={true}

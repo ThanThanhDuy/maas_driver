@@ -17,6 +17,8 @@ import { getDate, getHour } from "../../../utils/getDate";
 import { getDistanceArray } from "../../../utils/getDistance";
 import { styles } from "./style";
 import { ActivityIndicator } from "react-native-paper";
+import { FORMAT } from "../../../constants/format";
+moment.locale("en");
 
 export const Agenda = ({
   _listSchedule,
@@ -27,8 +29,8 @@ export const Agenda = ({
   onRefresh,
 }) => {
   const _setBookingSelected = useSetRecoilState(bookingSelected);
-  const handleSelect = (item, date) => {
-    _setBookingSelected({ ...item, Date: date });
+  const handleSelect = (item, date, time) => {
+    _setBookingSelected({ ...item, Date: date, Time: time });
     navigation.navigate("BookingReceive");
   };
 
@@ -44,13 +46,13 @@ export const Agenda = ({
             {/* weekdays */}
             <View style={styles.containerWeek}>
               <Text style={styles.textDay}>
-                {moment(item.Date, "DD-MM-YYYY").format("DD")}
+                {moment(item.Date, FORMAT.DATE).format("DD")}
               </Text>
               <Text style={styles.textDay}>
-                {moment(item.Date, "DD-MM-YYYY").format("MMM")}
+                {moment(item.Date, FORMAT.DATE).format("MMM")}
               </Text>
               <Text style={styles.textWeek}>
-                {getDate(item.Date, "DD-MM-YYYY")}
+                {getDate(item.Date, FORMAT.DATE)}
               </Text>
             </View>
             {/* route */}
@@ -59,7 +61,9 @@ export const Agenda = ({
               {item.RouteRoutines.map((itemR, index) => (
                 <TouchableOpacity
                   activeOpacity={0.7}
-                  onPress={() => handleSelect(itemR, item.Date)}
+                  onPress={() =>
+                    handleSelect(itemR, item.Date, itemR?.Schedules[0].Time)
+                  }
                   key={itemR.RouteCode + index}
                   style={styles.boxRoute}
                 >

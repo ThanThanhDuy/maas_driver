@@ -22,8 +22,10 @@ import { ArrowButton } from "../../components/commons/ArrowButton";
 import RadioGroup from "react-native-radio-buttons-group";
 import { getDistanceArray } from "../../utils/getDistance";
 import { styles } from "./style";
-import { compareTime } from "../../utils/compareTime";
+import { compareDate, compareTime } from "../../utils/compareTime";
 import { isUserWorking } from "../../store";
+import tripStatusService from "../../services/tripStatus";
+import { STATUS_TRIP } from "../../constants/status";
 
 const radioButtonsData = [
   {
@@ -71,6 +73,7 @@ export const BookingReceive = ({ navigation }) => {
   const [radioButtons, setRadioButtons] = useState(radioButtonsData);
   const [_startButton, _setStartButton] = useState(false);
   const [_refreshing, _setRefreshing] = useState(false);
+  const [_canCancel, _setCanCancel] = useState(false);
 
   const compareTimeStart = () => {
     _setRefreshing(true);
@@ -78,11 +81,15 @@ export const BookingReceive = ({ navigation }) => {
       _bookingSelected.Date,
       _bookingSelected.Schedules[0].Time
     );
+    const day = compareDate(_bookingSelected.Date);
     setTimeout(() => {
       _setRefreshing(false);
     }, 1000);
     if (minutes <= 60 && minutes > 0) {
       _setStartButton(true);
+    }
+    if (day === -1) {
+      _setCanCancel(true);
     }
   };
 
@@ -103,25 +110,74 @@ export const BookingReceive = ({ navigation }) => {
   };
 
   const handleCancel = () => {
+    // if (_canCancel) {
     _setOpenModal(true);
+    // } else {
+    //   Alert.alert("Can't cancel trip", "You only can cancel before 1 day", [
+    //     { text: "OK", onPress: () => {} },
+    //   ]);
+    // }
+  };
+
+  const handleConfirmCancel = async () => {
+    let count = 0;
+    for (const item of _bookingSelected.Schedules) {
+      try {
+        const res = await tripStatusService.updateTripStatus(
+          item.BookingDetailDriverCode,
+          -1
+        );
+        if (res && res.StatusCode === 200) {
+          console.log(res);
+          count++;
+        }
+      } catch (error) {
+        console.log(
+          "🚀 ~ file: index.jsx ~ line 130 ~ handleConfirmCancel ~ error",
+          error
+        );
+      }
+    }
+    if (count === _bookingSelected.Schedules.length) {
+      Alert.alert("Cancel trip successfully", "", [
+        {
+          text: "OK",
+          onPress: () => {
+            _setOpenModal(false);
+            navigation.navigate("Schedule");
+          },
+        },
+      ]);
+    }
   };
 
   const onRefresh = () => {
     compareTimeStart();
   };
 
-  const handleStart = () => {
-    if (_startButton && isUserWorkingState) {
+  const handleStart = async () => {
+    // if (_startButton && isUserWorkingState) {
+    const listCode = _bookingSelected.Schedules.map(
+      item => item.BookingDetailDriverCode
+    );
+    const response = await tripStatusService.startTrip(listCode);
+    console.log(response);
+    if (response && response.StatusCode === 200) {
       navigation.navigate("Driving");
     } else {
-      Alert.alert("Can't start trip", "Please turn on the active status", [
-        {
-          text: "Back Home",
-          onPress: () => navigation.navigate("Home"),
-        },
+      Alert.alert("Can't start trip", "Something went wrong", [
         { text: "OK", onPress: () => {} },
       ]);
     }
+    // } else {
+    //   Alert.alert("Can't start trip", "Please turn on the active status", [
+    //     {
+    //       text: "Back Home",
+    //       onPress: () => navigation.navigate("Home"),
+    //     },
+    //     { text: "OK", onPress: () => {} },
+    //   ]);
+    // }
   };
 
   return (
@@ -133,7 +189,7 @@ export const BookingReceive = ({ navigation }) => {
           _setOpenModal(false);
         }}
       >
-        <HeaderBack navigation={navigation} title="Back" />
+        <HeaderBack navigation={navigation} title="Schedule" />
         <View style={styles.typeVehicle}>
           <Image source={vehicle["ViBike"]} style={styles.imgVehicle} />
           <Text style={styles.textVehicle}>ViBike</Text>
@@ -197,9 +253,19 @@ export const BookingReceive = ({ navigation }) => {
           <TouchableOpacity
             activeOpacity={0.6}
             onPress={handleCancel}
-            style={styles.boxClose}
+            style={[
+              styles.boxClose,
+              {
+                backgroundColor: _canCancel ? "#FBFCFE" : "#ccc",
+                borderColor: _canCancel ? colors.red : "#ccc",
+              },
+            ]}
           >
-            <Ionicons name="close" size={32} color={colors.red} />
+            <Ionicons
+              name="close"
+              size={32}
+              color={_canCancel ? colors.red : colors.white}
+            />
           </TouchableOpacity>
           <TouchableOpacity
             activeOpacity={0.6}
@@ -213,7 +279,8 @@ export const BookingReceive = ({ navigation }) => {
             onPress={() => handleStart()}
           >
             <Text style={styles.textStart}>
-              {_bookingSelected.Schedules[0].TripStatus === 0
+              {_bookingSelected.Schedules[0].TripStatus ===
+              STATUS_TRIP["NotYet"]
                 ? "Start"
                 : "Continue"}
             </Text>
@@ -239,9 +306,7 @@ export const BookingReceive = ({ navigation }) => {
             <TouchableOpacity
               activeOpacity={0.6}
               style={styles.boxConfirm}
-              onPress={() => {
-                _setOpenModal(false);
-              }}
+              onPress={handleConfirmCancel}
             >
               <Text style={styles.textConfirm}>Confirm</Text>
             </TouchableOpacity>

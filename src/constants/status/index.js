@@ -1,6 +1,7 @@
 export const STATUS_TRIP = {
   Cancelled: -1,
   NotYet: 0,
-  PickedUp: 1,
-  Completed: 2,
+  Started: 1,
+  PickedUp: 2,
+  Completed: 3,
 };

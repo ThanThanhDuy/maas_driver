@@ -5,6 +5,7 @@ import { Avatar } from "../../../components";
 import { IMAGES } from "../../../assets";
 import { appTheme, colors } from "../../../constants";
 import { styles } from "./style";
+import { FORMAT } from "../../../constants/format";
 
 export const Chat = ({ _listChat, _handleSelectChatBox }) => {
   const handleSelectMessage = (roomType, roomCode) => {
@@ -61,22 +62,24 @@ export const Chat = ({ _listChat, _handleSelectChatBox }) => {
                     {item.lastedText}
                   </Text>
                   {item.lastedTime !== "" &&
-                    moment(
-                      moment(item.lastedTime, "DD-MM-YYYY HH:mm:ss")
-                    ).isSame(new Date(), "day") && (
+                    moment(moment(item.lastedTime, FORMAT.DATE_TIME)).isSame(
+                      new Date(),
+                      "day"
+                    ) && (
                       <Text>
                         {moment(
-                          moment(item.lastedTime, "DD-MM-YYYY HH:mm:ss")
-                        ).format("hh:mm A")}
+                          moment(item.lastedTime, FORMAT.DATE_TIME)
+                        ).format("HH:mm")}
                       </Text>
                     )}
                   {item.lastedTime !== "" &&
-                    !moment(
-                      moment(item.lastedTime, "DD-MM-YYYY HH:mm:ss")
-                    ).isSame(new Date(), "day") && (
+                    !moment(moment(item.lastedTime, FORMAT.DATE_TIME)).isSame(
+                      new Date(),
+                      "day"
+                    ) && (
                       <Text>
                         {moment(
-                          moment(item.lastedTime, "DD-MM-YYYY HH:mm:ss")
+                          moment(item.lastedTime, FORMAT.DATE_TIME)
                         ).format("DD MMM")}
                       </Text>
                     )}

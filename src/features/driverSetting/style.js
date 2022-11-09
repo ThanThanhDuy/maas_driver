@@ -9,11 +9,22 @@ export const styles = StyleSheet.create({
   },
   boxButton: {
     position: "absolute",
-    bottom: 30,
+    bottom: 0,
     left: 0,
     width: appTheme.WIDTH,
     flexDirection: "row",
     justifyContent: "center",
+    backgroundColor: "#fff",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 0,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 10,
+    height: 90,
+    paddingTop: 10,
   },
   boxItem: {
     backgroundColor: "#fff",
@@ -25,7 +36,7 @@ export const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 10,
     elevation: 10,
-    height: 140,
+
     marginBottom: 20,
     marginHorizontal: 15,
     borderRadius: 8,
@@ -38,6 +49,7 @@ export const styles = StyleSheet.create({
   textAddress: {
     marginLeft: 10,
     fontFamily: "Roboto_400",
-    fontSize: fontSize.large,
+    fontSize: fontSize.medium,
+    marginRight: 10,
   },
 });

@@ -3,6 +3,7 @@ import React, { useRef, useState } from "react";
 import moment from "moment";
 import { colors } from "../../../../constants";
 import { styles } from "./style";
+import { FORMAT } from "../../../../constants/format";
 
 export const Message = ({ item, index }) => {
   const [showTime, setShowTime] = useState(false);
@@ -38,8 +39,8 @@ export const Message = ({ item, index }) => {
                 <Text
                   style={{ marginLeft: 10, color: colors.gray, marginTop: 5 }}
                 >
-                  {moment(moment(item.time, "DD-MM-YYYY HH:mm:ss")).format(
-                    "DD MMM HH:mm A"
+                  {moment(moment(item.time, FORMAT.DATE_TIME)).format(
+                    "DD MMM HH:mm"
                   )}
                 </Text>
               </View>
@@ -65,8 +66,8 @@ export const Message = ({ item, index }) => {
               <Text
                 style={{ marginLeft: 10, color: colors.gray, marginTop: 5 }}
               >
-                {moment(moment(item.time, "DD-MM-YYYY HH:mm:ss")).format(
-                  "DD MMM HH:mm A"
+                {moment(moment(item.time, FORMAT.DATE_TIME)).format(
+                  "DD MMM HH:mm"
                 )}
               </Text>
             )}

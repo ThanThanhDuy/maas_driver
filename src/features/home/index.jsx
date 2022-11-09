@@ -19,6 +19,7 @@ import { useRecoilState, useSetRecoilState } from "recoil";
 import { HubConnectionBuilder, Subject } from "@microsoft/signalr";
 import messageRoomsService from "../../services/messageRoom";
 import { ActivityIndicator } from "react-native-paper";
+
 import {
   bookingSelected,
   isUserWorking,
@@ -30,6 +31,7 @@ import { useIsFocused } from "@react-navigation/native";
 import StarRating from "react-native-star-rating-widget";
 import scheduleService from "../../services/Schedule";
 import moment from "moment";
+import { FORMAT } from "../../constants/format";
 
 export const Home = ({ navigation }) => {
   const styles = createStyle();
@@ -74,11 +76,11 @@ export const Home = ({ navigation }) => {
       const respone = await scheduleService.getScheduleByDate(
         1,
         1,
-        moment(new Date()).format("DD-MM-YYYY"),
-        moment(new Date()).format("DD-MM-YYYY")
+        moment(new Date()).format(FORMAT.DATE),
+        moment(new Date()).format(FORMAT.DATE)
       );
       if (respone.StatusCode === 200) {
-        if (respone.Data.Items[0].RouteRoutines.length > 0) {
+        if (respone?.Data?.Items[0]?.RouteRoutines.length > 0) {
           _setNextTrip(respone.Data.Items[0].RouteRoutines[0]);
         }
       }
@@ -188,10 +190,11 @@ export const Home = ({ navigation }) => {
         await newConnection.invoke("Login");
 
         newConnection.on("Connected", mess => {
-          console.log("Connected: ", mess);
+          console.log("Connected chat: ", mess);
         });
 
         newConnection.on("Message", async mess => {
+          console.log("receive mess");
           const response = await messageRoomsService.getMessageRooms();
           _setLoadMessage(response?.Data);
         });
@@ -206,7 +209,7 @@ export const Home = ({ navigation }) => {
   const handleSelect = () => {
     _setBookingSelected({
       ..._nextTrip,
-      Date: moment(new Date()).format("DD-MM-YYYY"),
+      Date: moment(new Date()).format(FORMAT.DATE),
     });
     navigation.navigate("BookingReceive");
   };
@@ -216,8 +219,9 @@ export const Home = ({ navigation }) => {
       <MapView
         style={StyleSheet.absoluteFill}
         initialRegion={region?.latitude ? region : null}
+        showsUserLocation={true}
       >
-        {region?.latitude && <Marker coordinate={region} />}
+        {/* {region?.latitude && <Marker coordinate={region} />} */}
       </MapView>
       <SafeAreaView style={{ flex: _isLoading ? 1 : 0 }}>
         <View style={styles.container}>

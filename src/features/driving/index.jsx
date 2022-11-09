@@ -14,7 +14,7 @@ import React, {
 } from "react";
 import { appTheme, colors } from "../../constants";
 import { AntDesign } from "@expo/vector-icons";
-import MapView from "react-native-maps";
+import MapView, { Marker } from "react-native-maps";
 import { Easing } from "react-native-reanimated";
 import {
   BottomSheetModal,
@@ -22,139 +22,48 @@ import {
   useBottomSheetTimingConfigs,
 } from "@gorhom/bottom-sheet";
 import SwipeButton from "rn-swipe-button";
-import { StepDriving } from "../../components";
+import { HeaderBack, StepDriving } from "../../components";
 import { ActivityIndicator } from "react-native-paper";
 import { styles } from "./style";
 import { bookingSelected } from "../../store";
-import { useRecoilValue } from "recoil";
+import { useRecoilValue, useSetRecoilState } from "recoil";
 import tripStatusService from "../../services/tripStatus";
+import MapViewDirections from "react-native-maps-directions";
+import scheduleService from "../../services/Schedule";
+import { COMMONS } from "../../constants";
+import { STATUS_TRIP } from "../../constants/status";
 
-const _stepDriving = [
-  {
-    StartStation: {
-      Index: 1,
-      Name: "A AI InnovationHub",
-      Code: "...",
-      Address: "Đường D1, Tân Phú, Thành phố Thủ Đức, Thành phố Hồ Chí Minh",
-    },
-    EndStation: {
-      Index: 5,
-      Name: "E AI InnovationHub",
-      Code: "...",
-      Address: "Đường D1, Tân Phú, Thành phố Thủ Đức, Thành phố Hồ Chí Minh",
-    },
-    User: {
-      Code: "",
-      Name: "Than Thanh Duy",
-      PhoneNumber: "1234",
-      ChattingRoomCode: "",
-    },
-    status: 0,
-  },
-  {
-    StartStation: {
-      Index: 2,
-      Name: "B AI InnovationHub",
-      Code: "...",
-      Address: "Đường D1, Tân Phú, Thành phố Thủ Đức, Thành phố Hồ Chí Minh",
-    },
-    EndStation: {
-      Index: 3,
-      Name: "C AI InnovationHub",
-      Code: "...",
-      Address: "Đường D1, Tân Phú, Thành phố Thủ Đức, Thành phố Hồ Chí Minh",
-    },
-    User: {
-      Code: "123",
-      Name: "Nguyen Dang Khoa",
-      PhoneNumber: "1234",
-      ChattingRoomCode: "",
-    },
-    status: 0,
-  },
-  {
-    StartStation: {
-      Index: 4,
-      Name: "D AI InnovationHub",
-      Code: "...",
-      Address: "Đường D1, Tân Phú, Thành phố Thủ Đức, Thành phố Hồ Chí Minh",
-    },
-    EndStation: {
-      Index: 6,
-      Name: "F AI InnovationHub",
-      Code: "...",
-      Address: "Đường D1, Tân Phú, Thành phố Thủ Đức, Thành phố Hồ Chí Minh",
-    },
-    User: {
-      Code: "123",
-      Name: "Quach Dai Loi",
-      PhoneNumber: "1234",
-      ChattingRoomCode: "",
-    },
-    status: 0,
-  },
-];
-
-let result = [];
-for (const step of _stepDriving) {
-  result.push({
-    index: step.StartStation.Index,
-    name: step.StartStation.Name,
-    address: step.StartStation.Address,
-    user: step.User,
-    position: "start",
-  });
-  result.push({
-    index: step.EndStation.Index,
-    name: step.EndStation.Name,
-    address: step.EndStation.Address,
-    user: step.User,
-    position: "end",
-  });
-}
-
-result = result.sort((step1, step2) => step1.index - step2.index);
-// {
-//   "address": "Đường D1, Tân Phú, Thành phố Thủ Đức, Thành phố Hồ Chí Minh",
-//   "index": 6,
-//   "name": "F AI InnovationHub",
-//   "position": "end",
-//   "user": Object {
-//     "ChattingRoomCode": "",
-//     "Code": "123",
-//     "Name": "Quach Dai Loi",
-//     "PhoneNumber": "1234",
-//   },
-// },
 export const Driving = ({ navigation }) => {
   const _bookingSelected = useRecoilValue(bookingSelected);
-  const [region, setRegion] = useState({
-    latitude: 10.841626311529279,
-    latitudeDelta: 0.01793054891924406,
-    longitude: 106.81133564102572,
-    longitudeDelta: 0.009999999999990905,
-  });
+  const [region, setRegion] = useState({});
+
   const animationConfigs = useBottomSheetTimingConfigs({
     duration: 250,
     easing: Easing.exp,
   });
+
   const bottomSheetModalRef = useRef(null);
-  const snapPoints = useMemo(() => [370, "80%"], []);
+  const ggmap = useRef(null);
+  const snapPoints = useMemo(() => [410, "80%"], []);
   const [_listStep, _setListStep] = useState(null);
   const [_isLoadingChangeStep, _setIsLoadingChangeStep] = useState(false);
   const [_statusSwipe, _setStatusSwipe] = useState({});
+  const _setBookingSelected = useSetRecoilState(bookingSelected);
 
   const handleStep = () => {
     let result = [];
     let array = [];
+    // type 0 : pick up,
+    // type 1 : drop off
     for (const item of _bookingSelected.Steps) {
       if (
-        (item.Type === 0 && item.TripStatus !== 1) ||
-        (item.Type === 1 && item.TripStatus !== 2)
+        (item.Type === 0 && item.TripStatus !== STATUS_TRIP["PickedUp"]) ||
+        (item.Type === 1 && item.TripStatus !== STATUS_TRIP["Completed"])
       ) {
         array.push(item);
       }
     }
+    // console.log(_bookingSelected);
     for (const [index, step] of array.entries()) {
       let bookingDetailDriverCode = step.BookingDetailDriverCode;
       let itemFound = _bookingSelected.Schedules.find(
@@ -197,7 +106,7 @@ export const Driving = ({ navigation }) => {
       handleStep();
     };
     handleData();
-  }, []);
+  }, [_bookingSelected]);
 
   const handleSheetChanges = useCallback(index => {
     // console.log("handleSheetChanges", index);
@@ -216,9 +125,9 @@ export const Driving = ({ navigation }) => {
     if (itemDeleted) {
       let tripStatus;
       if (itemDeleted.StationPosition === "start") {
-        tripStatus = 1;
+        tripStatus = STATUS_TRIP["PickedUp"];
       } else {
-        tripStatus = 2;
+        tripStatus = STATUS_TRIP["Completed"];
       }
       console.log(itemDeleted.BookingDetailDriverCode, tripStatus);
       const res = await tripStatusService.updateTripStatus(
@@ -263,16 +172,94 @@ export const Driving = ({ navigation }) => {
     }
   };
 
+  const handleRefresh = async () => {
+    // console.log(_bookingSelected.Schedules[0].BookingDetailDriverCode);
+    // console.log(_bookingSelected.Date);
+    // console.log(_bookingSelected.Time);
+    const respone = await scheduleService.getScheduleByDate(
+      1,
+      1,
+      _bookingSelected.Date,
+      _bookingSelected.Date
+    );
+    if (respone.StatusCode === 200 && respone.Data) {
+      for (const item of respone.Data.Items[0].RouteRoutines) {
+        for (const itemSchedule of item.Schedules) {
+          if (itemSchedule.Time === _bookingSelected.Time) {
+            console.log(itemSchedule.BookingDetailDriverCode);
+            _setBookingSelected({
+              ...item,
+              Date: respone.Data.Items[0].Date,
+              Time: itemSchedule.Time,
+            });
+          }
+        }
+      }
+    }
+  };
+
   return (
-    <SafeAreaView style={{ flex: 1, position: "relative" }}>
+    <SafeAreaView
+      style={{
+        flex: 1,
+        position: "relative",
+      }}
+    >
       <MapView
         style={[
           StyleSheet.absoluteFill,
-          { height: appTheme.HEIGHT - 200 - 100 },
+          { height: appTheme.HEIGHT - 200 - 200 },
         ]}
-        initialRegion={region.latitude ? region : null}
-        onRegionChange={onRegionChange}
-      />
+        showsUserLocation={true}
+        loadingEnabled={true}
+        ref={ggmap}
+        onMapReady={() =>
+          ggmap.current.fitToCoordinates(
+            _bookingSelected.Steps.map(item => {
+              return { latitude: item.Latitude, longitude: item.Longitude };
+            }),
+            {
+              edgePadding: { top: 100, right: 30, bottom: 50, left: 30 },
+              animated: false,
+            }
+          )
+        }
+      >
+        {_bookingSelected.Steps.map((item, index) => (
+          <Marker
+            key={index}
+            coordinate={{
+              latitudeDelta: 0.01793054891924406,
+              longitudeDelta: 0.009999999999990905,
+              latitude: item.Latitude,
+              longitude: item.Longitude,
+            }}
+            title={item.StationName}
+          />
+        ))}
+        <MapViewDirections
+          origin={{
+            latitudeDelta: 0.01793054891924406,
+            longitudeDelta: 0.009999999999990905,
+            latitude: _bookingSelected.Steps[0].Latitude,
+            longitude: _bookingSelected.Steps[0].Longitude,
+          }}
+          destination={{
+            latitudeDelta: 0.01793054891924406,
+            longitudeDelta: 0.009999999999990905,
+            latitude:
+              _bookingSelected.Steps[_bookingSelected.Steps.length - 1]
+                .Latitude,
+            longitude:
+              _bookingSelected.Steps[_bookingSelected.Steps.length - 1]
+                .Longitude,
+          }}
+          // apikey={COMMONS.GOOGLE_MAPS_APIKEY}
+          strokeWidth={5}
+          strokeColor={colors.primary}
+        />
+      </MapView>
+
       <BottomSheetModalProvider>
         <BottomSheetModal
           ref={bottomSheetModalRef}
@@ -282,6 +269,20 @@ export const Driving = ({ navigation }) => {
           enablePanDownToClose={false}
           animationConfigs={animationConfigs}
         >
+          <HeaderBack
+            navigation={navigation}
+            isRefresh={true}
+            onRefresh={handleRefresh}
+            isWarning={true}
+          />
+          <View
+            style={{
+              width: appTheme.WIDTH,
+              height: 1,
+              backgroundColor: "#ccc",
+              marginBottom: 5,
+            }}
+          ></View>
           <View style={styles.contentContainer}>
             <ScrollView style={{ flex: 1, marginBottom: 100 }}>
               {_listStep?.map((item, index) => (
@@ -295,7 +296,6 @@ export const Driving = ({ navigation }) => {
             </ScrollView>
           </View>
         </BottomSheetModal>
-        {/* </View> */}
       </BottomSheetModalProvider>
 
       <View style={styles.boxSwipe}>

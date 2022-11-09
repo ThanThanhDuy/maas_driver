@@ -30,10 +30,8 @@ export const styles = StyleSheet.create({
   boxClose: {
     borderWidth: 1,
     borderRadius: 8,
-    backgroundColor: "#FBFCFE",
     paddingVertical: 13,
     paddingHorizontal: 20,
-    borderColor: colors.red,
   },
   boxStart: {
     marginLeft: 10,

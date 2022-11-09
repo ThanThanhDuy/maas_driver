@@ -64,12 +64,19 @@ export const MailBox = ({ navigation }) => {
   };
 
   useEffect(() => {
+    let getMessage = (async function get() {
+      const response = await messageRoomsService.getMessageRooms();
+      handleMessage(response);
+    })();
+  }, [loadMessage]);
+
+  useEffect(() => {
     _setIsLoading(true);
     let getMessage = (async function get() {
       const response = await messageRoomsService.getMessageRooms();
       handleMessage(response);
     })();
-  }, [loadMessage, isFocused]);
+  }, [isFocused]);
 
   const _handleSelectChatBox = (roomType, roomCode) => {
     navigation.navigate("ChatDetail", {

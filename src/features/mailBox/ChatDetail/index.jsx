@@ -77,7 +77,6 @@ export const ChatDetail = ({ navigation, route }) => {
     const roomType = route.params.roomType;
     if (message.trim() !== "") {
       await messageService.sendMessage(roomCode, message.trim());
-      _setTextInput("");
       const response = await messageRoomsService.getMessageRooms(
         roomType,
         roomCode
@@ -85,6 +84,7 @@ export const ChatDetail = ({ navigation, route }) => {
       if (response && response.StatusCode === 200) {
         await handleRenderMessage(response.Data[0]);
       }
+      _setTextInput("");
     }
   };
 

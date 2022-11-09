@@ -9,6 +9,7 @@ import { BookingReceive } from "./bookingReceive";
 import { Driving } from "./driving";
 import { DriverSetting } from "./driverSetting";
 import { CreateRouteRoutine } from "./createRouteRoutine";
+import { DetailRoute } from "./detailRoute";
 
 export {
   WelCome,
@@ -22,4 +23,5 @@ export {
   Driving,
   DriverSetting,
   CreateRouteRoutine,
+  DetailRoute,
 };
