@@ -8,6 +8,7 @@ import { AntDesign } from "@expo/vector-icons";
 import { useIsFocused } from "@react-navigation/native";
 import { useSetRecoilState } from "recoil";
 import { tabSelected } from "../../store/navigation";
+import { FORMAT } from "../../constants/format";
 
 export const Schedule = ({ navigation }) => {
   const [_listSchedule, _setListSchedule] = useState([]);
@@ -30,8 +31,8 @@ export const Schedule = ({ navigation }) => {
       const respone = await scheduleService.getScheduleByDate(
         1,
         5,
-        moment(_dateFrom).format("DD-MM-YYYY"),
-        moment(_dateTo).format("DD-MM-YYYY")
+        moment(_dateFrom).format(FORMAT.DATE),
+        moment(_dateTo).format(FORMAT.DATE)
       );
       if (respone.Data && respone.Data.Items && respone.Data.Items.length > 0) {
         _setListSchedule(respone?.Data.Items);
@@ -55,8 +56,8 @@ export const Schedule = ({ navigation }) => {
         const respone = await scheduleService.getScheduleByDate(
           _page,
           5,
-          moment(_dateFrom).format("DD-MM-YYYY"),
-          moment(_dateTo).format("DD-MM-YYYY")
+          moment(_dateFrom).format(FORMAT.DATE),
+          moment(_dateTo).format(FORMAT.DATE)
         );
 
         if (
@@ -88,14 +89,14 @@ export const Schedule = ({ navigation }) => {
       _setPage(1);
       _setRefreshing(true);
       console.log(
-        moment(_dateFrom).format("DD-MM-YYYY"),
-        moment(_dateTo).format("DD-MM-YYYY")
+        moment(_dateFrom).format(FORMAT.DATE),
+        moment(_dateTo).format(FORMAT.DATE)
       );
       const respone = await scheduleService.getScheduleByDate(
         1,
         5,
-        moment(_dateFrom).format("DD-MM-YYYY"),
-        moment(_dateTo).format("DD-MM-YYYY")
+        moment(_dateFrom).format(FORMAT.DATE),
+        moment(_dateTo).format(FORMAT.DATE)
       );
       _setRefreshing(false);
       if (respone.Data && respone.Data.Items && respone.Data.Items.length > 0) {
@@ -122,8 +123,8 @@ export const Schedule = ({ navigation }) => {
     const respone = await scheduleService.getScheduleByDate(
       1,
       5,
-      moment(_dateFrom).format("DD-MM-YYYY"),
-      moment(_dateTo).format("DD-MM-YYYY")
+      moment(_dateFrom).format(FORMAT.DATE),
+      moment(_dateTo).format(FORMAT.DATE)
     );
     if (respone.Data && respone.Data.Items && respone.Data.Items.length > 0) {
       _setListSchedule(respone?.Data.Items);

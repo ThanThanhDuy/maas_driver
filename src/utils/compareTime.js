@@ -1,9 +1,10 @@
 import moment from "moment";
+import { FORMAT } from "../constants/format";
 
 // time start - time now
 export function compareTime(date, time) {
   var duration = moment.duration(
-    moment(moment(`${date} ${time}`, "DD-MM-YYYY HH:mm:ss").toDate()).diff(
+    moment(moment(`${date} ${time}`, FORMAT.DATE_TIME).toDate()).diff(
       moment(new Date())
     )
   );
@@ -11,8 +12,8 @@ export function compareTime(date, time) {
 }
 
 export function compareDate(date) {
-  return moment(moment(new Date()).format("DD-MM-YYYY"), "DD-MM-YYYY").diff(
-    moment(date, "DD-MM-YYYY"),
+  return moment(moment(new Date()).format(FORMAT.DATE), FORMAT.DATE).diff(
+    moment(date, FORMAT.DATE),
     "days"
   );
 }

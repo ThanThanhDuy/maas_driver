@@ -51,7 +51,7 @@ export const DetailRoute = ({ navigation, route }) => {
                     <Text>
                       {moment(
                         moment(routeSelectedState?.StartAt, "MM/DD/YYYY")
-                      ).format("DD-MM-YYYY")}
+                      ).format(FORMAT.DATE)}
                     </Text>
                   </View>
                   <View
@@ -74,7 +74,7 @@ export const DetailRoute = ({ navigation, route }) => {
                     <Text>
                       {moment(
                         moment(routeSelectedState?.EndAt, "MM/DD/YYYY")
-                      ).format("DD-MM-YYYY")}
+                      ).format(FORMAT.DATE)}
                     </Text>
                   </View>
                   <View

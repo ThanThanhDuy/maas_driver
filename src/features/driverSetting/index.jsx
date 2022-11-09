@@ -18,6 +18,7 @@ import { ActivityIndicator } from "react-native-paper";
 import { IMAGES } from "../../assets";
 import { useSetRecoilState } from "recoil";
 import { routeSelected } from "../../store";
+import { FORMAT } from "../../constants/format";
 
 export const DriverSetting = ({ navigation }) => {
   const [_listRouteRoutine, _setListRouteRoutine] = useState(null);
@@ -154,7 +155,7 @@ export const DriverSetting = ({ navigation }) => {
                       </Text>
                       <Text>
                         {moment(moment(item?.StartAt, "MM/DD/YYYY")).format(
-                          "DD-MM-YYYY"
+                          FORMAT.DATE
                         )}
                       </Text>
                     </View>
@@ -172,7 +173,7 @@ export const DriverSetting = ({ navigation }) => {
                       </Text>
                       <Text>
                         {moment(moment(item?.EndAt, "MM/DD/YYYY")).format(
-                          "DD-MM-YYYY"
+                          FORMAT.DATE
                         )}
                       </Text>
                     </View>

@@ -31,6 +31,7 @@ import { useIsFocused } from "@react-navigation/native";
 import StarRating from "react-native-star-rating-widget";
 import scheduleService from "../../services/Schedule";
 import moment from "moment";
+import { FORMAT } from "../../constants/format";
 
 export const Home = ({ navigation }) => {
   const styles = createStyle();
@@ -75,8 +76,8 @@ export const Home = ({ navigation }) => {
       const respone = await scheduleService.getScheduleByDate(
         1,
         1,
-        moment(new Date()).format("DD-MM-YYYY"),
-        moment(new Date()).format("DD-MM-YYYY")
+        moment(new Date()).format(FORMAT.DATE),
+        moment(new Date()).format(FORMAT.DATE)
       );
       if (respone.StatusCode === 200) {
         if (respone?.Data?.Items[0]?.RouteRoutines.length > 0) {
@@ -208,7 +209,7 @@ export const Home = ({ navigation }) => {
   const handleSelect = () => {
     _setBookingSelected({
       ..._nextTrip,
-      Date: moment(new Date()).format("DD-MM-YYYY"),
+      Date: moment(new Date()).format(FORMAT.DATE),
     });
     navigation.navigate("BookingReceive");
   };

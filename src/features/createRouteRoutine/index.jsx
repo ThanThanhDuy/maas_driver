@@ -30,6 +30,7 @@ import { AutocompleteDropdown } from "react-native-autocomplete-dropdown";
 import stationService from "../../services/station";
 import { useSetRecoilState } from "recoil";
 import { routeSelected } from "../../store";
+import { FORMAT } from "../../constants/format";
 
 const labels = ["Choose route", "Setting"];
 const customStyles = {
@@ -136,15 +137,15 @@ export const CreateRouteRoutine = ({ navigation }) => {
     _setLoadingConfirm(true);
     const res = await routeService.createRouteRoutine(
       _routeSelected.Code,
-      moment(_dateFrom).format("DD-MM-YYYY"),
-      moment(_dateTo).format("DD-MM-YYYY"),
-      moment(_time).format("HH:mm") + ":00"
+      moment(_dateFrom).format(FORMAT.DATE),
+      moment(_dateTo).format(FORMAT.DATE),
+      moment(_time).format(FORMAT.TIME) + ":00"
     );
     console.log(
       _routeSelected.Code,
-      moment(_dateFrom).format("DD-MM-YYYY"),
-      moment(_dateTo).format("DD-MM-YYYY"),
-      moment(_time).format("HH:mm") + ":00"
+      moment(_dateFrom).format(FORMAT.DATE),
+      moment(_dateTo).format(FORMAT.DATE),
+      moment(_time).format(FORMAT.TIME) + ":00"
     );
     if (res && res.StatusCode === 200) {
       _setIsShow(true);
