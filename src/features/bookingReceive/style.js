@@ -53,19 +53,17 @@ export const styles = StyleSheet.create({
     margin: 0,
     position: "absolute",
     width: "100%",
-    top: appTheme.HEIGHT - 250,
-  },
-  boxRadio: {
-    backgroundColor: colors.white,
-    height: 250,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 0,
     },
     shadowOpacity: 0.3,
-    justifyContent: "space-between",
-    paddingBottom: 40,
+    shadowRadius: 15,
+    elevation: 0,
+    backgroundColor: colors.white,
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
   },
   boxConfirm: {
     marginLeft: 10,
@@ -77,6 +75,7 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     width: appTheme.WIDTH - 60,
+    marginBottom: 35,
   },
   textConfirm: {
     color: colors.white,
