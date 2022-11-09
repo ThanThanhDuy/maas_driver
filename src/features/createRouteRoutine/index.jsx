@@ -134,29 +134,39 @@ export const CreateRouteRoutine = ({ navigation }) => {
   }, []);
 
   const handleConfirm = async () => {
-    _setLoadingConfirm(true);
-    const res = await routeService.createRouteRoutine(
-      _routeSelected.Code,
-      moment(_dateFrom).format(FORMAT.DATE),
-      moment(_dateTo).format(FORMAT.DATE),
-      moment(_time).format(FORMAT.TIME) + ":00"
+    Alert.alert(
+      "Add new route rountine",
+      "Are you sure you want to cancel this trip?",
+      [
+        {
+          text: "No",
+          onPress: () => {},
+          style: "cancel",
+        },
+        {
+          text: "Yes",
+          onPress: async () => {
+            _setLoadingConfirm(true);
+            const res = await routeService.createRouteRoutine(
+              _routeSelected.Code,
+              moment(_dateFrom).format(FORMAT.DATE),
+              moment(_dateTo).format(FORMAT.DATE),
+              moment(_time).format(FORMAT.TIME) + ":00"
+            );
+            if (res && res.StatusCode === 200) {
+              _setIsShow(true);
+              setTimeout(() => {
+                _setIsShow(false);
+                navigation.navigate("DriverSetting");
+              }, 2000);
+            } else {
+              Alert.alert("Error", res?.Message);
+            }
+            _setLoadingConfirm(false);
+          },
+        },
+      ]
     );
-    console.log(
-      _routeSelected.Code,
-      moment(_dateFrom).format(FORMAT.DATE),
-      moment(_dateTo).format(FORMAT.DATE),
-      moment(_time).format(FORMAT.TIME) + ":00"
-    );
-    if (res && res.StatusCode === 200) {
-      _setIsShow(true);
-      setTimeout(() => {
-        _setIsShow(false);
-        navigation.navigate("DriverSetting");
-      }, 2000);
-    } else {
-      Alert.alert("Error", res?.Message);
-    }
-    _setLoadingConfirm(false);
   };
 
   const handleSelectedItem = item => {
@@ -188,19 +198,21 @@ export const CreateRouteRoutine = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View style={{ flex: 1 }}>
-            <HeaderBack
-              style={{ color: colors.text }}
-              iconColor={colors.text}
-              navigation={navigation}
-            />
-            <View style={{ flex: 1 }}>
+            <SafeAreaView>
+              <HeaderBack
+                style={{ color: colors.text }}
+                iconColor={colors.text}
+                navigation={navigation}
+              />
+            </SafeAreaView>
+            <SafeAreaView style={{ flex: 1 }}>
               <StepIndicator
                 customStyles={customStyles}
                 currentPosition={currentPosition}
@@ -613,7 +625,7 @@ export const CreateRouteRoutine = ({ navigation }) => {
                   </View>
                 </View>
               </View>
-            </View>
+            </SafeAreaView>
             <Dialog visible={_isShow} onDismiss={() => _setIsShow(false)}>
               <Dialog.Content>
                 <View style={{ alignItems: "center" }}>
@@ -634,6 +646,6 @@ export const CreateRouteRoutine = ({ navigation }) => {
           </View>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 };
