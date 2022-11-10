@@ -10,6 +10,10 @@ import {
   Alert,
   Animated,
   TextInput,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from "react-native";
 import React, { useEffect, useRef, useState } from "react";
 import { vehicle } from "../../constants/vehicle";
@@ -32,6 +36,8 @@ import moment from "moment";
 import { FORMAT } from "../../constants/format";
 import { REASON } from "../../constants/reason";
 import { ActivityIndicator } from "react-native-paper";
+import { useIsFocused } from "@react-navigation/native";
+import scheduleService from "../../services/Schedule";
 
 export const BookingReceive = ({ navigation }) => {
   const _bookingSelected = useRecoilValue(bookingSelected);
@@ -45,6 +51,8 @@ export const BookingReceive = ({ navigation }) => {
   const [_reasonOther, _setReasonOther] = useState("");
   const modalMotion = useRef(new Animated.Value(-350)).current;
   const setShowToastCancelState = useSetRecoilState(showToastCancel);
+  const isFocused = useIsFocused();
+  const _setBookingSelected = useSetRecoilState(bookingSelected);
 
   const compareTimeStart = (
     _dayBeforeApproveCancel,
@@ -56,6 +64,7 @@ export const BookingReceive = ({ navigation }) => {
       _bookingSelected.Date,
       _bookingSelected.Schedules[0].Time
     );
+    console.log(minutes);
     const day = compareDate(_bookingSelected.Date);
     setTimeout(() => {
       loading && _setRefreshing(false);
@@ -82,14 +91,39 @@ export const BookingReceive = ({ navigation }) => {
         // before more days
         _setCanCancel(true);
       }
+    } else {
+      return "You only can cancel before 1 day";
     }
   };
 
   useEffect(() => {
     const day = 1;
     const time = "19:30:00";
+    const handleLoad = async () => {
+      const respone = await scheduleService.getScheduleByDate(
+        1,
+        1,
+        _bookingSelected.Date,
+        _bookingSelected.Date
+      );
+      if (respone.StatusCode === 200 && respone.Data) {
+        for (const item of respone.Data.Items[0].RouteRoutines) {
+          for (const itemSchedule of item.Schedules) {
+            if (itemSchedule.Time === _bookingSelected.Time) {
+              console.log(itemSchedule.BookingDetailDriverCode);
+              _setBookingSelected({
+                ...item,
+                Date: respone.Data.Items[0].Date,
+                Time: itemSchedule.Time,
+              });
+            }
+          }
+        }
+      }
+    };
+    handleLoad();
     compareTimeStart(day, time);
-  }, []);
+  }, [isFocused]);
 
   function onPressRadioButton(index) {
     _setRadioButtonsSelected(index);
@@ -170,32 +204,51 @@ export const BookingReceive = ({ navigation }) => {
   };
 
   const onRefresh = () => {
-    compareTimeStart();
+    const day = 1;
+    const time = "19:30:00";
+    compareTimeStart(day, time);
   };
 
   const handleStart = async () => {
-    // if (_startButton && isUserWorkingState) {
-    const listCode = _bookingSelected.Schedules.map(
-      item => item.BookingDetailDriverCode
-    );
-    const response = await tripStatusService.startTrip(listCode);
-    console.log(response);
-    if (response && response.StatusCode === 200) {
-      navigation.navigate("Driving");
+    // check working status driver
+    console.log(_startButton);
+    if (_startButton) {
+      // check time to start
+      if (isUserWorkingState) {
+        if (
+          _bookingSelected.Schedules[0].TripStatus === STATUS_TRIP["NotYet"]
+        ) {
+          const listCode = _bookingSelected.Schedules.map(
+            item => item.BookingDetailDriverCode
+          );
+          const response = await tripStatusService.startTrip(listCode);
+          console.log(response);
+          if (response && response.StatusCode === 200) {
+            navigation.navigate("Driving");
+          } else {
+            Alert.alert("Can't start trip", "Something went wrong", [
+              { text: "OK", onPress: () => {} },
+            ]);
+          }
+        } else {
+          navigation.navigate("Driving");
+        }
+      } else {
+        Alert.alert("Can't start trip", "Please turn on the active status", [
+          {
+            text: "Back Home",
+            onPress: () => navigation.navigate("Home"),
+          },
+          { text: "OK", onPress: () => {} },
+        ]);
+      }
     } else {
-      Alert.alert("Can't start trip", "Something went wrong", [
-        { text: "OK", onPress: () => {} },
-      ]);
+      Alert.alert(
+        "Can't start trip",
+        "It's not time to start, please come back later",
+        [{ text: "OK", onPress: () => {} }]
+      );
     }
-    // } else {
-    //   Alert.alert("Can't start trip", "Please turn on the active status", [
-    //     {
-    //       text: "Back Home",
-    //       onPress: () => navigation.navigate("Home"),
-    //     },
-    //     { text: "OK", onPress: () => {} },
-    //   ]);
-    // }
   };
 
   const handleClose = () => {
@@ -208,204 +261,181 @@ export const BookingReceive = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View
-        style={{ opacity: _openModal ? 0.5 : 1 }}
-        activeOpacity={1}
-        onPress={() => {
-          _setOpenModal(false);
-        }}
-      >
-        <HeaderBack navigation={navigation} title="Schedule" />
-        <View style={styles.typeVehicle}>
-          <Image source={vehicle["ViBike"]} style={styles.imgVehicle} />
-          <Text style={styles.textVehicle}>ViBike</Text>
-        </View>
-
-        <ScrollView
-          style={styles.scrollView}
-          refreshControl={
-            <RefreshControl refreshing={_refreshing} onRefresh={onRefresh} />
-          }
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={{ flex: 1 }}
+    >
+      <SafeAreaView style={styles.container}>
+        <View
+          style={{ opacity: _openModal ? 0.5 : 1, flex: 1 }}
+          activeOpacity={1}
+          onPress={() => {
+            _setOpenModal(false);
+          }}
         >
-          {_bookingSelected?.Schedules.map((item, index) => (
-            <BoxBooking
-              item={item}
-              index={index}
-              key={index}
-              navigation={navigation}
-              _startButton={_startButton}
+          <HeaderBack navigation={navigation} title="Schedule" />
+          <View style={styles.typeVehicle}>
+            <Image source={vehicle["ViBike"]} style={styles.imgVehicle} />
+            <Text style={styles.textVehicle}>ViBike</Text>
+          </View>
+
+          <ScrollView
+            style={styles.scrollView}
+            refreshControl={
+              <RefreshControl refreshing={_refreshing} onRefresh={onRefresh} />
+            }
+          >
+            {_bookingSelected?.Schedules.map((item, index) => (
+              <BoxBooking
+                item={item}
+                index={index}
+                key={index}
+                navigation={navigation}
+                _startButton={_startButton}
+              />
+            ))}
+            <WrapperContent
+              text={getDistanceArray(_bookingSelected?.Schedules)}
+              label="Total Distance"
             />
-          ))}
-
-          {/* Distance */}
-          <WrapperContent
-            text={getDistanceArray(_bookingSelected?.Schedules)}
-            label="Total Distance"
-          />
-          {/* money */}
-          {/* <WrapperContent
-            label="Total"
-            text={
-              numberWithCommas(
-                _bookingSelected?.Schedules.reduce(
-                  (prev, cur) => prev + cur.Price,
-                  0
-                )
-              ) + " VND"
-            }
-          /> */}
-          {/* total Income */}
-          {/* <WrapperContent
-            label="Total Income"
-            text={
-              numberWithCommas(
-                _bookingSelected?.Schedules.reduce(
-                  (prev, cur) => prev + cur.Price,
-                  0
-                ) -
-                  _bookingSelected?.Schedules.reduce(
-                    (prev, cur) => prev + cur.Price,
-                    0
-                  ) *
-                    (20 / 100)
-              ) + " VND"
-            }
-          /> */}
-        </ScrollView>
-      </View>
-
-      <View style={styles.bottomControl}>
-        <View style={{ flexDirection: "row" }}>
-          <TouchableOpacity
-            activeOpacity={0.6}
-            onPress={handleCancel}
-            style={[
-              styles.boxClose,
-              {
-                backgroundColor: _canCancel ? "#FBFCFE" : "#ccc",
-                borderColor: _canCancel ? colors.red : "#ccc",
-              },
-            ]}
-          >
-            {_loadingCancel ? (
-              <ActivityIndicator
-                color={colors.red}
-                size={32}
-                style={{ opacity: 0.8 }}
-              />
-            ) : (
-              <Ionicons
-                name="close"
-                size={32}
-                color={_canCancel ? colors.red : colors.white}
-              />
-            )}
-          </TouchableOpacity>
-          <TouchableOpacity
-            activeOpacity={0.6}
-            style={[
-              styles.boxStart,
-              {
-                backgroundColor:
-                  _startButton && isUserWorkingState ? colors.primary : "#ccc",
-              },
-            ]}
-            onPress={() => handleStart()}
-          >
-            <Text style={styles.textStart}>
-              {_bookingSelected.Schedules[0].TripStatus ===
-              STATUS_TRIP["NotYet"]
-                ? "Start"
-                : "Continue"}
-            </Text>
-          </TouchableOpacity>
+          </ScrollView>
         </View>
-      </View>
-      <Animated.View
-        style={[
-          styles.boxModal,
-          {
-            bottom: modalMotion,
-          },
-        ]}
-      >
-        <View>
-          <View style={styles.boxRadio}>
-            <View style={{ marginHorizontal: 30, marginVertical: 20 }}>
-              {REASON.map((item, index) => (
-                <TouchableOpacity
-                  activeOpacity={0.6}
-                  key={index}
-                  onPress={() => onPressRadioButton(index)}
-                >
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      marginBottom: 15,
-                    }}
-                  >
-                    {_radioButtonsSelected === index ? (
-                      <Ionicons
-                        name="radio-button-on"
-                        size={24}
-                        color={colors.primary}
-                      />
-                    ) : (
-                      <Ionicons
-                        name="radio-button-off"
-                        size={24}
-                        color={colors.gray}
-                      />
-                    )}
-                    <Text
-                      style={{
-                        fontFamily: "Roboto_400",
-                        fontSize: fontSize.medium,
-                        marginLeft: 5,
-                      }}
-                    >
-                      {item.reason}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-              {_radioButtonsSelected === REASON.length - 1 && (
-                <View>
-                  <TextInput
-                    style={{
-                      backgroundColor: "#eee",
-                      height: 45,
-                      borderRadius: 5,
-                      paddingHorizontal: 10,
-                      fontFamily: "Roboto_400",
-                    }}
-                    autoFocus={true}
-                    placeholder="Enter reason"
-                    onChangeText={_setReasonOther}
-                    value={_reasonOther}
-                  />
-                </View>
-              )}
-            </View>
-            <View style={{ alignItems: "center" }}>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.bottomControl}>
+            <View style={{ flexDirection: "row" }}>
               <TouchableOpacity
                 activeOpacity={0.6}
-                style={styles.boxConfirm}
-                onPress={handleConfirmCancel}
+                onPress={handleCancel}
+                style={[
+                  styles.boxClose,
+                  {
+                    backgroundColor: _canCancel ? "#FBFCFE" : "#ccc",
+                    borderColor: _canCancel ? colors.red : "#ccc",
+                  },
+                ]}
               >
-                <Text style={styles.textConfirm}>Confirm</Text>
+                {_loadingCancel ? (
+                  <ActivityIndicator
+                    color={colors.red}
+                    size={32}
+                    style={{ opacity: 0.8 }}
+                  />
+                ) : (
+                  <Ionicons
+                    name="close"
+                    size={32}
+                    color={_canCancel ? colors.red : colors.white}
+                  />
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity
+                activeOpacity={0.6}
+                style={[
+                  styles.boxStart,
+                  {
+                    backgroundColor:
+                      _startButton && isUserWorkingState
+                        ? colors.primary
+                        : "#ccc",
+                  },
+                ]}
+                onPress={() => handleStart()}
+              >
+                <Text style={styles.textStart}>
+                  {_bookingSelected.Schedules[0].TripStatus ===
+                  STATUS_TRIP["NotYet"]
+                    ? "Start"
+                    : "Continue"}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
-          <ArrowButton
-            style={styles.buttonClose}
-            onPress={() => handleClose()}
-            type="close"
-          />
-        </View>
-      </Animated.View>
-    </SafeAreaView>
+        </TouchableWithoutFeedback>
+        <Animated.View
+          style={[
+            styles.boxModal,
+            {
+              bottom: modalMotion,
+            },
+          ]}
+        >
+          <View>
+            <View style={styles.boxRadio}>
+              <View style={{ marginHorizontal: 30, marginVertical: 20 }}>
+                {REASON.map((item, index) => (
+                  <TouchableOpacity
+                    activeOpacity={0.6}
+                    key={index}
+                    onPress={() => onPressRadioButton(index)}
+                  >
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        marginBottom: 15,
+                      }}
+                    >
+                      {_radioButtonsSelected === index ? (
+                        <Ionicons
+                          name="radio-button-on"
+                          size={24}
+                          color={colors.primary}
+                        />
+                      ) : (
+                        <Ionicons
+                          name="radio-button-off"
+                          size={24}
+                          color={colors.gray}
+                        />
+                      )}
+                      <Text
+                        style={{
+                          fontFamily: "Roboto_400",
+                          fontSize: fontSize.medium,
+                          marginLeft: 5,
+                        }}
+                      >
+                        {item.reason}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+                {_radioButtonsSelected === REASON.length - 1 && (
+                  <View>
+                    <TextInput
+                      style={{
+                        backgroundColor: "#eee",
+                        height: 45,
+                        borderRadius: 5,
+                        paddingHorizontal: 10,
+                        fontFamily: "Roboto_400",
+                      }}
+                      autoFocus={true}
+                      placeholder="Enter reason"
+                      onChangeText={_setReasonOther}
+                      value={_reasonOther}
+                    />
+                  </View>
+                )}
+              </View>
+              <View style={{ alignItems: "center" }}>
+                <TouchableOpacity
+                  activeOpacity={0.6}
+                  style={styles.boxConfirm}
+                  onPress={handleConfirmCancel}
+                >
+                  <Text style={styles.textConfirm}>Confirm</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+            <ArrowButton
+              style={styles.buttonClose}
+              onPress={() => handleClose()}
+              type="close"
+            />
+          </View>
+        </Animated.View>
+      </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 };

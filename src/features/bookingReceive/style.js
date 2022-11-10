@@ -5,7 +5,6 @@ export const styles = StyleSheet.create({
   container: {
     backgroundColor: "#fff",
     flex: 1,
-    justifyContent: "space-between",
   },
   typeVehicle: {
     marginTop: -35,
@@ -25,8 +24,12 @@ export const styles = StyleSheet.create({
   scrollView: {
     height: appTheme.HEIGHT - 75 - 62 - 84,
     marginBottom: 20,
+    // flex: 1,
   },
-  bottomControl: { marginHorizontal: 15, marginBottom: 20 },
+  bottomControl: {
+    marginHorizontal: 15,
+    marginBottom: 20,
+  },
   boxClose: {
     borderWidth: 1,
     borderRadius: 8,

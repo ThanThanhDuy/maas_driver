@@ -7,6 +7,7 @@ import { useRecoilValue } from "recoil";
 import { routeSelected } from "../../store";
 import moment from "moment";
 import { getDistance } from "../../utils/getDistance";
+import { FORMAT } from "../../constants/format";
 
 export const DetailRoute = ({ navigation, route }) => {
   const [_fromScreen, _setFromScreen] = useState("");

@@ -19,12 +19,14 @@ import { IMAGES } from "../../assets";
 import { useSetRecoilState } from "recoil";
 import { routeSelected } from "../../store";
 import { FORMAT } from "../../constants/format";
+import { useIsFocused } from "@react-navigation/native";
 
 export const DriverSetting = ({ navigation }) => {
   const [_listRouteRoutine, _setListRouteRoutine] = useState(null);
   const [_isLoading, _setIsLoading] = useState(false);
   const [_refreshing, _setRefresing] = useState(false);
   const _setRouteSelected = useSetRecoilState(routeSelected);
+  const isFocused = useIsFocused();
 
   useEffect(() => {
     const handleGetRouteRoutine = async () => {
@@ -36,7 +38,7 @@ export const DriverSetting = ({ navigation }) => {
       _setIsLoading(false);
     };
     handleGetRouteRoutine();
-  }, []);
+  }, [isFocused]);
 
   const onRefresh = async () => {
     _setRefresing(true);

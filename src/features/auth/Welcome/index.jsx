@@ -10,15 +10,15 @@ export const WelCome = ({ navigation }) => {
     const checkLogin = async () => {
       const accessToken = await AsyncStorage.getItem("AccessToken");
       const isLogined = Boolean(accessToken);
-      // if (isLogined) {
-      //   setTimeout(() => {
-      //     navigation.navigate("Auth");
-      //   }, 2000);
-      // } else {
-      setTimeout(() => {
-        navigation.navigate("NotAuth");
-      }, 2000);
-      // }
+      if (isLogined) {
+        setTimeout(() => {
+          navigation.navigate("Auth");
+        }, 2000);
+      } else {
+        setTimeout(() => {
+          navigation.navigate("NotAuth");
+        }, 2000);
+      }
     };
     checkLogin();
   }, []);
