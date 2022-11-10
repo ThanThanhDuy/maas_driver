@@ -8,98 +8,91 @@ import {
   Linking,
   RefreshControl,
   Alert,
+  Animated,
+  TextInput,
 } from "react-native";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { vehicle } from "../../constants/vehicle";
 import { appTheme, colors, fontSize } from "../../constants";
 import { Ionicons } from "@expo/vector-icons";
 import numberWithCommas from "../../utils/numberWithCommas";
 import { BoxBooking, HeaderBack, WrapperContent } from "../../components";
 import Modal from "react-native-modal";
-import { useRecoilValue } from "recoil";
+import { useRecoilValue, useSetRecoilState } from "recoil";
 import { bookingSelected } from "../../store/booking";
 import { ArrowButton } from "../../components/commons/ArrowButton";
 import RadioGroup from "react-native-radio-buttons-group";
 import { getDistanceArray } from "../../utils/getDistance";
 import { styles } from "./style";
 import { compareDate, compareTime } from "../../utils/compareTime";
-import { isUserWorking } from "../../store";
+import { isUserWorking, showToastCancel } from "../../store";
 import tripStatusService from "../../services/tripStatus";
 import { STATUS_TRIP } from "../../constants/status";
-
-const radioButtonsData = [
-  {
-    id: "1",
-    label: "Unable to contact customer",
-    value: "option1",
-    color: "#31B057",
-    borderColor: "#ccc",
-    labelStyle: {
-      color: colors.text,
-      fontFamily: "Roboto_400",
-      fontSize: fontSize.medium,
-    },
-  },
-  {
-    id: "2",
-    label: "Wrong address",
-    value: "option2",
-    color: "#31B057",
-    borderColor: "#ccc",
-    labelStyle: {
-      color: colors.text,
-      fontFamily: "Roboto_400",
-      fontSize: fontSize.medium,
-    },
-  },
-  {
-    id: "4",
-    label: "Damaged vehicle, unable to complete the trip",
-    value: "option4",
-    color: "#31B057",
-    borderColor: "#ccc",
-    labelStyle: {
-      color: colors.text,
-      fontFamily: "Roboto_400",
-      fontSize: fontSize.medium,
-    },
-  },
-];
+import moment from "moment";
+import { FORMAT } from "../../constants/format";
+import { REASON } from "../../constants/reason";
+import { ActivityIndicator } from "react-native-paper";
 
 export const BookingReceive = ({ navigation }) => {
   const _bookingSelected = useRecoilValue(bookingSelected);
   const isUserWorkingState = useRecoilValue(isUserWorking);
   const [_openModal, _setOpenModal] = useState(false);
-  const [radioButtons, setRadioButtons] = useState(radioButtonsData);
+  const [_radioButtonsSelected, _setRadioButtonsSelected] = useState(0);
   const [_startButton, _setStartButton] = useState(false);
   const [_refreshing, _setRefreshing] = useState(false);
   const [_canCancel, _setCanCancel] = useState(false);
+  const [_loadingCancel, _setLoadingCancel] = useState(false);
+  const [_reasonOther, _setReasonOther] = useState("");
+  const modalMotion = useRef(new Animated.Value(-350)).current;
+  const setShowToastCancelState = useSetRecoilState(showToastCancel);
 
-  const compareTimeStart = () => {
-    _setRefreshing(true);
+  const compareTimeStart = (
+    _dayBeforeApproveCancel,
+    _timeBeforeApproveCancel,
+    loading = true
+  ) => {
+    loading && _setRefreshing(true);
     const minutes = compareTime(
       _bookingSelected.Date,
       _bookingSelected.Schedules[0].Time
     );
     const day = compareDate(_bookingSelected.Date);
     setTimeout(() => {
-      _setRefreshing(false);
+      loading && _setRefreshing(false);
     }, 1000);
     if (minutes <= 60 && minutes > 0) {
       _setStartButton(true);
     }
-    if (day === -1) {
-      _setCanCancel(true);
+    if (day <= _dayBeforeApproveCancel * -1) {
+      if (day === -1) {
+        const minutes = compareTime(
+          moment(moment(_bookingSelected.Date, FORMAT.DATE))
+            .subtract(1, "days")
+            .format(FORMAT.DATE),
+          _timeBeforeApproveCancel
+        );
+        // check time to cancel
+        if (minutes <= 0) {
+          _setCanCancel(false);
+          return "You only can cancel before 19:30";
+        } else {
+          _setCanCancel(true);
+        }
+      } else {
+        // before more days
+        _setCanCancel(true);
+      }
     }
   };
 
   useEffect(() => {
-    compareTimeStart();
+    const day = 1;
+    const time = "19:30:00";
+    compareTimeStart(day, time);
   }, []);
 
-  function onPressRadioButton(radioButtonsArray) {
-    console.log(radioButtonsArray);
-    setRadioButtons(radioButtonsArray);
+  function onPressRadioButton(index) {
+    _setRadioButtonsSelected(index);
   }
 
   const callNumber = phone => {
@@ -110,45 +103,70 @@ export const BookingReceive = ({ navigation }) => {
   };
 
   const handleCancel = () => {
-    // if (_canCancel) {
-    _setOpenModal(true);
-    // } else {
-    //   Alert.alert("Can't cancel trip", "You only can cancel before 1 day", [
-    //     { text: "OK", onPress: () => {} },
-    //   ]);
-    // }
-  };
-
-  const handleConfirmCancel = async () => {
-    let count = 0;
-    for (const item of _bookingSelected.Schedules) {
-      try {
-        const res = await tripStatusService.updateTripStatus(
-          item.BookingDetailDriverCode,
-          -1
-        );
-        if (res && res.StatusCode === 200) {
-          console.log(res);
-          count++;
-        }
-      } catch (error) {
-        console.log(
-          "🚀 ~ file: index.jsx ~ line 130 ~ handleConfirmCancel ~ error",
-          error
-        );
+    if (_canCancel) {
+      _setOpenModal(true);
+      Animated.timing(modalMotion, {
+        toValue: 0,
+        duration: 500,
+        useNativeDriver: false,
+      }).start();
+    } else {
+      const day = 1;
+      const time = "19:30:00";
+      const result = compareTimeStart(day, time, false);
+      if (result) {
+        Alert.alert("Can't cancel trip", result, [
+          { text: "OK", onPress: () => {} },
+        ]);
       }
     }
-    if (count === _bookingSelected.Schedules.length) {
-      Alert.alert("Cancel trip successfully", "", [
-        {
-          text: "OK",
-          onPress: () => {
-            _setOpenModal(false);
+  };
+
+  const handleConfirmCancel = () => {
+    Alert.alert("Cancel trip", "Are you sure you want to cancel this trip?", [
+      {
+        text: "No",
+        onPress: () => {},
+        style: "cancel",
+      },
+      {
+        text: "Yes",
+        onPress: async () => {
+          _setLoadingCancel(true);
+          handleClose();
+          const listBookingDetailDriverCode = _bookingSelected.Schedules.map(
+            item => item.BookingDetailDriverCode
+          );
+          const reason =
+            _radioButtonsSelected === REASON.length - 1
+              ? `${REASON[_radioButtonsSelected].reason}: ${_reasonOther}`
+              : REASON[_radioButtonsSelected].reason;
+          const response = await tripStatusService.cancelTrip(
+            listBookingDetailDriverCode,
+            reason
+          );
+          if (response.StatusCode === 200) {
+            setShowToastCancelState(true);
             navigation.navigate("Schedule");
-          },
+            _setLoadingCancel(false);
+            setTimeout(() => {
+              setShowToastCancelState(false);
+            }, 3000);
+          } else {
+            Alert.alert("Something went wrong", "Please try again", [
+              { text: "OK", onPress: () => {} },
+            ]);
+            _setOpenModal(true);
+            Animated.timing(modalMotion, {
+              toValue: 0,
+              duration: 500,
+              useNativeDriver: false,
+            }).start();
+            _setLoadingCancel(false);
+          }
         },
-      ]);
-    }
+      },
+    ]);
   };
 
   const onRefresh = () => {
@@ -178,6 +196,15 @@ export const BookingReceive = ({ navigation }) => {
     //     { text: "OK", onPress: () => {} },
     //   ]);
     // }
+  };
+
+  const handleClose = () => {
+    _setOpenModal(false);
+    Animated.timing(modalMotion, {
+      toValue: -350,
+      duration: 200,
+      useNativeDriver: false,
+    }).start();
   };
 
   return (
@@ -261,11 +288,19 @@ export const BookingReceive = ({ navigation }) => {
               },
             ]}
           >
-            <Ionicons
-              name="close"
-              size={32}
-              color={_canCancel ? colors.red : colors.white}
-            />
+            {_loadingCancel ? (
+              <ActivityIndicator
+                color={colors.red}
+                size={32}
+                style={{ opacity: 0.8 }}
+              />
+            ) : (
+              <Ionicons
+                name="close"
+                size={32}
+                color={_canCancel ? colors.red : colors.white}
+              />
+            )}
           </TouchableOpacity>
           <TouchableOpacity
             activeOpacity={0.6}
@@ -287,39 +322,90 @@ export const BookingReceive = ({ navigation }) => {
           </TouchableOpacity>
         </View>
       </View>
-      <Modal
-        isVisible={_openModal}
-        animationInTiming={400}
-        animationOutTiming={1000}
-        backdropOpacity={0}
-        coverScreen={false}
-        deviceHeight={120}
-        style={styles.boxModal}
+      <Animated.View
+        style={[
+          styles.boxModal,
+          {
+            bottom: modalMotion,
+          },
+        ]}
       >
-        <View style={styles.boxRadio}>
-          <RadioGroup
-            containerStyle={{ alignItems: "flex-start", padding: 10 }}
-            radioButtons={radioButtons}
-            onPress={onPressRadioButton}
-          />
-          <View style={{ alignItems: "center" }}>
-            <TouchableOpacity
-              activeOpacity={0.6}
-              style={styles.boxConfirm}
-              onPress={handleConfirmCancel}
-            >
-              <Text style={styles.textConfirm}>Confirm</Text>
-            </TouchableOpacity>
+        <View>
+          <View style={styles.boxRadio}>
+            <View style={{ marginHorizontal: 30, marginVertical: 20 }}>
+              {REASON.map((item, index) => (
+                <TouchableOpacity
+                  activeOpacity={0.6}
+                  key={index}
+                  onPress={() => onPressRadioButton(index)}
+                >
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      marginBottom: 15,
+                    }}
+                  >
+                    {_radioButtonsSelected === index ? (
+                      <Ionicons
+                        name="radio-button-on"
+                        size={24}
+                        color={colors.primary}
+                      />
+                    ) : (
+                      <Ionicons
+                        name="radio-button-off"
+                        size={24}
+                        color={colors.gray}
+                      />
+                    )}
+                    <Text
+                      style={{
+                        fontFamily: "Roboto_400",
+                        fontSize: fontSize.medium,
+                        marginLeft: 5,
+                      }}
+                    >
+                      {item.reason}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+              {_radioButtonsSelected === REASON.length - 1 && (
+                <View>
+                  <TextInput
+                    style={{
+                      backgroundColor: "#eee",
+                      height: 45,
+                      borderRadius: 5,
+                      paddingHorizontal: 10,
+                      fontFamily: "Roboto_400",
+                    }}
+                    autoFocus={true}
+                    placeholder="Enter reason"
+                    onChangeText={_setReasonOther}
+                    value={_reasonOther}
+                  />
+                </View>
+              )}
+            </View>
+            <View style={{ alignItems: "center" }}>
+              <TouchableOpacity
+                activeOpacity={0.6}
+                style={styles.boxConfirm}
+                onPress={handleConfirmCancel}
+              >
+                <Text style={styles.textConfirm}>Confirm</Text>
+              </TouchableOpacity>
+            </View>
           </View>
+          <ArrowButton
+            style={styles.buttonClose}
+            onPress={() => handleClose()}
+            type="close"
+          />
         </View>
-        <ArrowButton
-          style={styles.buttonClose}
-          onPress={() => {
-            _setOpenModal(false);
-          }}
-          type="close"
-        />
-      </Modal>
+      </Animated.View>
     </SafeAreaView>
   );
 };

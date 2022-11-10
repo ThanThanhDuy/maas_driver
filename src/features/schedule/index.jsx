@@ -6,9 +6,11 @@ import scheduleService from "../../services/Schedule";
 import moment from "moment";
 import { AntDesign } from "@expo/vector-icons";
 import { useIsFocused } from "@react-navigation/native";
-import { useSetRecoilState } from "recoil";
+import { useRecoilState, useSetRecoilState } from "recoil";
 import { tabSelected } from "../../store/navigation";
 import { FORMAT } from "../../constants/format";
+import { Snackbar } from "react-native-paper";
+import { showToastCancel } from "../../store";
 
 export const Schedule = ({ navigation }) => {
   const [_listSchedule, _setListSchedule] = useState([]);
@@ -24,6 +26,8 @@ export const Schedule = ({ navigation }) => {
   const _setTabSelected = useSetRecoilState(tabSelected);
   const [_refreshing, _setRefreshing] = useState(false);
   const [_haveData, _setHaveData] = useState(true);
+  const [showToastCancelState, setShowToastCancelState] =
+    useRecoilState(showToastCancel);
 
   useEffect(() => {
     const getSchedule = async () => {
@@ -35,6 +39,7 @@ export const Schedule = ({ navigation }) => {
         moment(_dateTo).format(FORMAT.DATE)
       );
       if (respone.Data && respone.Data.Items && respone.Data.Items.length > 0) {
+        _setListSchedule([]);
         _setListSchedule(respone?.Data.Items);
         _setTotalCountPage(respone?.Data.TotalPagesCount);
         _setHaveData(true);
@@ -202,6 +207,14 @@ export const Schedule = ({ navigation }) => {
           <Text>Ops! Looks like you don't have any trips during this time</Text>
         </View>
       )}
+      <Snackbar
+        style={{ backgroundColor: colors.primary }}
+        visible={showToastCancelState}
+        onDismiss={() => setShowToastCancelState(false)}
+        duration={1000}
+      >
+        Cancel trip successfully!
+      </Snackbar>
     </SafeAreaView>
   );
 };
