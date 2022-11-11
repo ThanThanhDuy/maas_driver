@@ -96,7 +96,7 @@ export const DetailRoute = ({ navigation, route }) => {
                     <Text style={{ marginBottom: 10, color: colors.primary }}>
                       Distance
                     </Text>
-                    <Text>{routeSelectedState?.Distance}12</Text>
+                    <Text>{getDistance(routeSelectedState?.Distance)}</Text>
                   </View>
                 </View>
                 <View

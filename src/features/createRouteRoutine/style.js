@@ -126,5 +126,6 @@ export const styles = StyleSheet.create({
     fontFamily: "Roboto_500",
     color: colors.text,
     fontSize: fontSize.h3,
+    marginBottom: 20,
   },
 });

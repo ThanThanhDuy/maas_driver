@@ -31,6 +31,11 @@ import stationService from "../../services/station";
 import { useSetRecoilState } from "recoil";
 import { routeSelected } from "../../store";
 import { FORMAT } from "../../constants/format";
+import { checkTimeLastPreviousWeek } from "../../utils/checkTimeToCreate";
+import SegmentedControl from "@react-native-segmented-control/segmented-control";
+import { compareTimeTodayBeforeTimeCo } from "../../utils/compareTime";
+import { TIME_CREATE_ROUTE } from "../../constants/timeCreateRoute";
+import { getCurrentMonth, getCurrentYear } from "../../utils/getDate";
 
 const labels = ["Choose route", "Setting"];
 const customStyles = {
@@ -57,18 +62,25 @@ const customStyles = {
   currentStepLabelColor: colors.primary,
 };
 
+const TAB_SEGMENT = {
+  THIS_MONTH: 0,
+  NEXT_MONTH: 1,
+};
+
 export const CreateRouteRoutine = ({ navigation }) => {
   const [currentPosition, setCurrentPosition] = useState(0);
   const [_listRoute, _setListRoute] = React.useState(null);
   const [_openModal, _setOpenModal] = useState(false);
   const [_isShow, _setIsShow] = useState(false);
   const [_routeSelected, _setRouteSelected] = useState({});
-  const [_dateFrom, _setDateFrom] = useState(
-    moment(new Date()).add(1, "days").toDate()
-  );
+  const [_dateFrom, _setDateFrom] = useState(moment(new Date()).toDate());
   const [_dateTo, _setDateTo] = useState(
-    moment(new Date()).add(8, "days").toDate()
+    moment(new Date()).add(7, "days").toDate()
   );
+  const [_maximunDate, _setMaximunDate] = useState(
+    moment().endOf("month").toDate()
+  );
+  const [_minimumDate, _setMinimumDate] = useState(moment(new Date()).toDate());
   const [_time, _setTime] = useState(new Date());
   const bottomSheetModalRef = useRef(null);
   const snapPoints = [420, 120];
@@ -82,6 +94,8 @@ export const CreateRouteRoutine = ({ navigation }) => {
   );
   const dropdownController = useRef(null);
   const _setRouteSelectedState = useSetRecoilState(routeSelected);
+  const [_selectedIndexSegment, _setSelectedIndexSegment] = useState(0);
+  const [_canChooseNextMonth, _setCanChooseNextMonth] = useState(false);
 
   const handleGetRoute = async (routeCode, text) => {
     _setLoadingRoute(true);
@@ -97,6 +111,31 @@ export const CreateRouteRoutine = ({ navigation }) => {
     setTimeout(() => {
       _setLoadingRoute(false);
     }, 1000);
+  };
+
+  const handleThisMonth = () => {
+    const checkTimeBeforeLimit = compareTimeTodayBeforeTimeCo(
+      TIME_CREATE_ROUTE.END_TIME_TO_ADD_ROUTE
+    );
+    if (checkTimeBeforeLimit) {
+      _setDateFrom(moment(new Date()).toDate());
+      let dateTo = moment(new Date()).add(6, "days").toDate();
+      if (moment(dateTo).format("M") !== getCurrentMonth()) {
+        dateTo = moment().endOf("month").toDate();
+      }
+      _setDateTo(dateTo);
+      _setMaximunDate(moment().endOf("month").toDate());
+      _setMinimumDate(moment(new Date()).toDate());
+    } else {
+      _setDateFrom(moment(new Date()).add(1, "days").toDate());
+      let dateTo = moment(new Date()).add(7, "days").toDate();
+      if (moment(dateTo).format("M") !== getCurrentMonth()) {
+        dateTo = moment().endOf("month").toDate();
+      }
+      _setDateTo(dateTo);
+      _setMaximunDate(moment().endOf("month").toDate());
+      _setMinimumDate(moment(new Date()).add(1, "days").toDate());
+    }
   };
 
   useEffect(() => {
@@ -115,6 +154,13 @@ export const CreateRouteRoutine = ({ navigation }) => {
     };
     handleGetRoute("", "Ops! Route list is being updated");
     handleGetStation();
+    const handleCheckTime = () => {
+      // can choose next month
+      _setCanChooseNextMonth(checkTimeLastPreviousWeek().result);
+      // check time in limit 20:00:00
+      handleThisMonth();
+    };
+    handleCheckTime();
   }, []);
 
   const handleFilter = () => {
@@ -134,19 +180,17 @@ export const CreateRouteRoutine = ({ navigation }) => {
   }, []);
 
   const handleConfirm = async () => {
-    Alert.alert(
-      "Add new route rountine",
-      "Are you sure you want to cancel this trip?",
-      [
-        {
-          text: "No",
-          onPress: () => {},
-          style: "cancel",
-        },
-        {
-          text: "Yes",
-          onPress: async () => {
-            _setLoadingConfirm(true);
+    Alert.alert("Add new route rountine", "Are you sure you register?", [
+      {
+        text: "No",
+        onPress: () => {},
+        style: "cancel",
+      },
+      {
+        text: "Yes",
+        onPress: async () => {
+          _setLoadingConfirm(true);
+          if (!moment(_dateFrom).isAfter(moment(_dateTo))) {
             const res = await routeService.createRouteRoutine(
               _routeSelected.Code,
               moment(_dateFrom).format(FORMAT.DATE),
@@ -162,11 +206,13 @@ export const CreateRouteRoutine = ({ navigation }) => {
             } else {
               Alert.alert("Error", res?.Message);
             }
-            _setLoadingConfirm(false);
-          },
+          } else {
+            Alert.alert("Error", "Date end must be lager than date start");
+          }
+          _setLoadingConfirm(false);
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const handleSelectedItem = item => {
@@ -195,6 +241,41 @@ export const CreateRouteRoutine = ({ navigation }) => {
     navigation.navigate("DetailRoute", {
       fromScreen: "Choose route",
     });
+  };
+
+  const handleChangeSegment = index => {
+    if (_canChooseNextMonth) {
+      if (index === TAB_SEGMENT.THIS_MONTH) {
+        _setSelectedIndexSegment(TAB_SEGMENT.THIS_MONTH);
+        handleThisMonth();
+      } else {
+        _setSelectedIndexSegment(TAB_SEGMENT.NEXT_MONTH);
+        let nextMonth =
+          getCurrentMonth() === "12"
+            ? "01"
+            : (Number(getCurrentMonth()) + 1).toString();
+        const nextYear =
+          getCurrentMonth() === "12"
+            ? (Number(getCurrentYear()) + 1).toString()
+            : getCurrentYear();
+        _setDateFrom(
+          moment(`01-${nextMonth}-${nextYear}`, FORMAT.DATE).toDate()
+        );
+        _setDateTo(
+          moment(`01-${nextMonth}-${nextYear}`, FORMAT.DATE)
+            .add(6, "days")
+            .toDate()
+        );
+        _setMaximunDate(
+          moment(moment(`01-${nextMonth}-${nextYear}`, FORMAT.DATE))
+            .endOf("month")
+            .toDate()
+        );
+        _setMinimumDate(
+          moment(`01-${nextMonth}-${nextYear}`, FORMAT.DATE).toDate()
+        );
+      }
+    }
   };
 
   return (
@@ -529,6 +610,21 @@ export const CreateRouteRoutine = ({ navigation }) => {
                   <Text style={styles.textlabelSetting}>
                     Setting date and time
                   </Text>
+                  <SegmentedControl
+                    tintColor={colors.primary}
+                    values={
+                      _canChooseNextMonth
+                        ? ["This Month", "Next Month"]
+                        : ["This Month"]
+                    }
+                    selectedIndex={_selectedIndexSegment}
+                    activeFontStyle={{ color: colors.white }}
+                    onChange={event =>
+                      handleChangeSegment(
+                        event.nativeEvent.selectedSegmentIndex
+                      )
+                    }
+                  />
                   <View
                     style={{
                       flexDirection: "row",
@@ -554,6 +650,8 @@ export const CreateRouteRoutine = ({ navigation }) => {
                         backgroundColor: colors.transparent,
                         width: 160,
                       }}
+                      minimumDate={_minimumDate}
+                      maximumDate={_maximunDate}
                     />
                     <Dropdown
                       label="To"
@@ -573,6 +671,8 @@ export const CreateRouteRoutine = ({ navigation }) => {
                         backgroundColor: colors.transparent,
                         width: 160,
                       }}
+                      minimumDate={_minimumDate}
+                      maximumDate={_maximunDate}
                     />
                   </View>
                   <Dropdown

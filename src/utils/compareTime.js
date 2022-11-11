@@ -17,3 +17,12 @@ export function compareDate(date) {
     "days"
   );
 }
+
+export function compareTimeTodayBeforeTimeCo(timeCo) {
+  return moment(new Date()).isBefore(
+    moment(
+      `${moment(new Date()).format(FORMAT.DATE)} ${timeCo}`,
+      FORMAT.DATE_TIME
+    )
+  );
+}

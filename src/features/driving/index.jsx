@@ -48,6 +48,7 @@ export const Driving = ({ navigation }) => {
   const [_listStep, _setListStep] = useState(null);
   const [_isLoadingChangeStep, _setIsLoadingChangeStep] = useState(false);
   const [_statusSwipe, _setStatusSwipe] = useState({});
+  const [_wayPoints, _setWayPoints] = useState([]);
   const _setBookingSelected = useSetRecoilState(bookingSelected);
 
   const handleStep = () => {
@@ -106,6 +107,18 @@ export const Driving = ({ navigation }) => {
       handleStep();
     };
     handleData();
+    if (_bookingSelected.Steps.length > 2) {
+      let listPoint = [];
+      for (let index = 1; index < _bookingSelected.Steps.length - 2; index++) {
+        listPoint.push({
+          latitudeDelta: 0.01793054891924406,
+          longitudeDelta: 0.009999999999990905,
+          latitude: _bookingSelected.Steps[index].Latitude,
+          longitude: _bookingSelected.Steps[index].Longitude,
+        });
+      }
+      _setWayPoints(listPoint);
+    }
   }, [_bookingSelected]);
 
   const handleSheetChanges = useCallback(index => {
@@ -257,6 +270,7 @@ export const Driving = ({ navigation }) => {
           // apikey={COMMONS.GOOGLE_MAPS_APIKEY}
           strokeWidth={5}
           strokeColor={colors.primary}
+          waypoints={_wayPoints}
         />
       </MapView>
 

@@ -10,3 +10,11 @@ export function getDate(date, formatDate) {
 export function getHour(hour, formatHour) {
   return moment(moment(hour, formatHour)).format("HH:mm");
 }
+
+export function getCurrentMonth() {
+  return moment(new Date()).format("M");
+}
+
+export function getCurrentYear() {
+  return moment(new Date()).format("YYYY");
+}
