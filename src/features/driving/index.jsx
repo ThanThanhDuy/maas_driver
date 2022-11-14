@@ -4,6 +4,10 @@ import {
   View,
   ScrollView,
   Alert,
+  Animated,
+  TouchableOpacity,
+  Text,
+  RefreshControl,
 } from "react-native";
 import React, {
   useCallback,
@@ -12,7 +16,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { appTheme, colors } from "../../constants";
+import { appTheme, colors, fontSize } from "../../constants";
 import { AntDesign } from "@expo/vector-icons";
 import MapView, { Marker } from "react-native-maps";
 import { Easing } from "react-native-reanimated";
@@ -32,6 +36,10 @@ import MapViewDirections from "react-native-maps-directions";
 import scheduleService from "../../services/Schedule";
 import { COMMONS } from "../../constants";
 import { STATUS_TRIP } from "../../constants/status";
+import { REASON_HELP } from "../../constants/reasonHelp";
+import { Ionicons } from "@expo/vector-icons";
+import { ArrowButton } from "../../components/commons/ArrowButton";
+import * as Location from "expo-location";
 
 export const Driving = ({ navigation }) => {
   const _bookingSelected = useRecoilValue(bookingSelected);
@@ -50,6 +58,11 @@ export const Driving = ({ navigation }) => {
   const [_statusSwipe, _setStatusSwipe] = useState({});
   const [_wayPoints, _setWayPoints] = useState([]);
   const _setBookingSelected = useSetRecoilState(bookingSelected);
+  const modalMotion = useRef(new Animated.Value(-350)).current;
+  const [_radioButtonsSelected, _setRadioButtonsSelected] = useState(0);
+  const [_openModal, _setOpenModal] = useState(false);
+  const [_refresh, _setRefresh] = useState(false);
+  const [_refreshingControl, _setRefreshingControl] = useState(false);
 
   const handleStep = () => {
     let result = [];
@@ -83,12 +96,14 @@ export const Driving = ({ navigation }) => {
       let ChattingRoomCode = "";
       PhoneNumber = itemFound.User.PhoneNumber;
       ChattingRoomCode = itemFound.User.ChattingRoomCode;
+      let Time = itemFound.Time;
       result.push({
         ...step,
         StationAddress,
         StationPosition,
         PhoneNumber,
         ChattingRoomCode,
+        Time,
       });
     }
     _setListStep(result);
@@ -131,64 +146,97 @@ export const Driving = ({ navigation }) => {
   };
 
   const handleSwipeSuccess = async () => {
-    _setIsLoadingChangeStep(true);
-    let stepTmp = [..._listStep];
-    // remove step
-    let itemDeleted = stepTmp[0];
-    if (itemDeleted) {
-      let tripStatus;
-      if (itemDeleted.StationPosition === "start") {
-        tripStatus = STATUS_TRIP["PickedUp"];
-      } else {
-        tripStatus = STATUS_TRIP["Completed"];
-      }
-      console.log(itemDeleted.BookingDetailDriverCode, tripStatus);
-      const res = await tripStatusService.updateTripStatus(
-        itemDeleted.BookingDetailDriverCode,
-        tripStatus
+    let { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert(
+        'Turn on location services to allow "ViGo" to determine your location',
+        "",
+        [{ text: "OK", onPress: () => {} }]
       );
-      console.log(res);
-      if (res.StatusCode === 200) {
-        stepTmp.shift();
-        if (stepTmp.length > 0) {
-          let statusSwipe = {};
-          if (stepTmp[0].StationPosition === "start") {
-            statusSwipe = {
-              text: `Pick up ${stepTmp[0].UserName}`,
-              color: colors.primary,
-            };
-          } else {
-            statusSwipe = {
-              text: `Drop off ${stepTmp[0].UserName}`,
-              color: colors.orange,
-            };
-          }
-          _setStatusSwipe(statusSwipe);
-          _setListStep(stepTmp.length > 0 ? stepTmp : []);
-          _setIsLoadingChangeStep(false);
-          forceResetLastButton && forceResetLastButton();
+      return;
+    } else {
+      let location = await Location.getCurrentPositionAsync({});
+      _setIsLoadingChangeStep(true);
+      let stepTmp = [..._listStep];
+      // remove step
+      let itemDeleted = stepTmp[0];
+      if (itemDeleted) {
+        let tripStatus;
+        if (itemDeleted.StationPosition === "start") {
+          tripStatus = STATUS_TRIP["PickedUp"];
         } else {
-          navigation.navigate("Success");
-          _setStatusSwipe({
-            text: `Finish`,
-            color: colors.primary,
-          });
-          _setListStep(stepTmp.length > 0 ? stepTmp : []);
+          tripStatus = STATUS_TRIP["Completed"];
+        }
+        console.log(itemDeleted.BookingDetailDriverCode, tripStatus);
+        const res = await tripStatusService.updateTripStatus(
+          itemDeleted.BookingDetailDriverCode,
+          tripStatus,
+          location.coords.latitude,
+          location.coords.longitude
+        );
+        console.log(res);
+        if (res.StatusCode === 200) {
+          stepTmp.shift();
+          if (stepTmp.length > 0) {
+            let statusSwipe = {};
+            if (stepTmp[0].StationPosition === "start") {
+              statusSwipe = {
+                text: `Pick up ${stepTmp[0].UserName}`,
+                color: colors.primary,
+              };
+            } else {
+              statusSwipe = {
+                text: `Drop off ${stepTmp[0].UserName}`,
+                color: colors.orange,
+              };
+            }
+            _setStatusSwipe(statusSwipe);
+            _setListStep(stepTmp.length > 0 ? stepTmp : []);
+            handleRefresh();
+            _setIsLoadingChangeStep(false);
+            forceResetLastButton && forceResetLastButton();
+          } else {
+            navigation.navigate("Success");
+            _setStatusSwipe({
+              text: `Finish`,
+              color: colors.primary,
+            });
+            _setListStep(stepTmp.length > 0 ? stepTmp : []);
+            _setIsLoadingChangeStep(false);
+            forceResetLastButton && forceResetLastButton();
+          }
+        } else if (
+          res.StatusCode === 500 &&
+          res?.Message.includes("Your location must be within")
+        ) {
+          Alert.alert(
+            "Location is too far",
+            "Your location is too far from the drop off point, please approach the drop off point",
+            [
+              {
+                text: "OK",
+                onPress: () => {
+                  _setIsLoadingChangeStep(false);
+                  forceResetLastButton && forceResetLastButton();
+                },
+              },
+            ]
+          );
+        } else {
           _setIsLoadingChangeStep(false);
           forceResetLastButton && forceResetLastButton();
+          Alert.alert("Error", "Ops! Something went wrong");
         }
-      } else {
-        _setIsLoadingChangeStep(false);
-        forceResetLastButton && forceResetLastButton();
-        Alert.alert("Error", "Ops! Something went wrong");
       }
     }
   };
 
-  const handleRefresh = async () => {
+  const handleRefresh = async (isLoading = false, refreshingControl) => {
     // console.log(_bookingSelected.Schedules[0].BookingDetailDriverCode);
     // console.log(_bookingSelected.Date);
     // console.log(_bookingSelected.Time);
+    isLoading && _setRefresh(true);
+    refreshingControl && _setRefreshingControl(true);
     const respone = await scheduleService.getScheduleByDate(
       1,
       1,
@@ -199,7 +247,6 @@ export const Driving = ({ navigation }) => {
       for (const item of respone.Data.Items[0].RouteRoutines) {
         for (const itemSchedule of item.Schedules) {
           if (itemSchedule.Time === _bookingSelected.Time) {
-            console.log(itemSchedule.BookingDetailDriverCode);
             _setBookingSelected({
               ...item,
               Date: respone.Data.Items[0].Date,
@@ -208,6 +255,102 @@ export const Driving = ({ navigation }) => {
           }
         }
       }
+    }
+    isLoading && _setRefresh(false);
+    refreshingControl && _setRefreshingControl(false);
+  };
+
+  function onPressRadioButton(index) {
+    _setRadioButtonsSelected(index);
+  }
+
+  const handleHelp = () => {
+    if (_listStep[0].TripStatus === 1) {
+      _setOpenModal(true);
+      Animated.timing(modalMotion, {
+        toValue: 0,
+        duration: 500,
+        useNativeDriver: false,
+      }).start();
+    } else {
+      Alert.alert("Feature is being updated, please try again later", "", [
+        { text: "OK", onPress: () => {} },
+      ]);
+    }
+  };
+
+  const handleClose = () => {
+    _setOpenModal(false);
+    Animated.timing(modalMotion, {
+      toValue: -350,
+      duration: 200,
+      useNativeDriver: false,
+    }).start();
+  };
+
+  const handleConfirm = async () => {
+    if (_listStep[0].TripStatus === 1) {
+      Alert.alert(
+        "Confirm",
+        `Are you sure the customer is not coming? ${_listStep[0].UserName}'s trip will be completed after you press YES`,
+        [
+          {
+            text: "No",
+            onPress: () => {},
+            style: "cancel",
+          },
+          {
+            text: "Yes",
+            onPress: async () => {
+              if (_radioButtonsSelected === 0) {
+                let { status } =
+                  await Location.requestForegroundPermissionsAsync();
+                if (status !== "granted") {
+                  Alert.alert(
+                    'Turn on location services to allow "ViGo" to determine your location',
+                    "",
+                    [{ text: "OK", onPress: () => {} }]
+                  );
+                  return;
+                } else {
+                  let location = await Location.getCurrentPositionAsync({});
+                  // console.log(_listStep[0]);
+                  // complete when customer don't arrive
+                  const res = await tripStatusService.updateTripStatus(
+                    _listStep[0].BookingDetailDriverCode,
+                    STATUS_TRIP["Completed"],
+                    location.coords.latitude,
+                    location.coords.longitude
+                  );
+                  // console.log("🚀 ~ DRIVING ~ ", res);
+                  if (res && res.StatusCode === 200) {
+                    handleRefresh();
+                  } else if (
+                    res.StatusCode === 500 &&
+                    res?.Message.includes("Your location must be within")
+                  ) {
+                    Alert.alert(
+                      "Location is too far",
+                      "Your location is too far from the pick up point, please approach the pick up point",
+                      [{ text: "OK", onPress: () => {} }]
+                    );
+                  }
+                }
+              } else {
+                Alert.alert(
+                  "Feature is being updated, please try again later",
+                  "",
+                  [{ text: "OK", onPress: () => {} }]
+                );
+              }
+            },
+          },
+        ]
+      );
+    } else {
+      Alert.alert("Feature is being updated, please try again later", "", [
+        { text: "OK", onPress: () => {} },
+      ]);
     }
   };
 
@@ -221,7 +364,10 @@ export const Driving = ({ navigation }) => {
       <MapView
         style={[
           StyleSheet.absoluteFill,
-          { height: appTheme.HEIGHT - 200 - 200 },
+          {
+            height: appTheme.HEIGHT - 200 - 200,
+            opacity: _openModal ? 0.3 : 1,
+          },
         ]}
         showsUserLocation={true}
         loadingEnabled={true}
@@ -282,12 +428,15 @@ export const Driving = ({ navigation }) => {
           onChange={handleSheetChanges}
           enablePanDownToClose={false}
           animationConfigs={animationConfigs}
+          containerStyle={{ opacity: _openModal ? 0.3 : 1 }}
         >
           <HeaderBack
             navigation={navigation}
             isRefresh={true}
             onRefresh={handleRefresh}
             isWarning={true}
+            onWarning={handleHelp}
+            refresh={_refresh}
           />
           <View
             style={{
@@ -298,7 +447,15 @@ export const Driving = ({ navigation }) => {
             }}
           ></View>
           <View style={styles.contentContainer}>
-            <ScrollView style={{ flex: 1, marginBottom: 100 }}>
+            <ScrollView
+              style={{ flex: 1, marginBottom: 100 }}
+              refreshControl={
+                <RefreshControl
+                  refreshing={_refreshingControl}
+                  onRefresh={() => handleRefresh(false, true)}
+                />
+              }
+            >
               {_listStep?.map((item, index) => (
                 <StepDriving
                   index={index}
@@ -353,6 +510,73 @@ export const Driving = ({ navigation }) => {
           onSwipeSuccess={handleSwipeSuccess}
         />
       </View>
+      <Animated.View
+        style={[
+          styles.boxModal,
+          {
+            bottom: modalMotion,
+          },
+        ]}
+      >
+        <View>
+          <View style={styles.boxRadio}>
+            <View style={{ marginHorizontal: 30, marginVertical: 20 }}>
+              {REASON_HELP.map((item, index) => (
+                <TouchableOpacity
+                  activeOpacity={0.6}
+                  key={index}
+                  onPress={() => onPressRadioButton(index)}
+                >
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      marginBottom: 15,
+                    }}
+                  >
+                    {_radioButtonsSelected === index ? (
+                      <Ionicons
+                        name="radio-button-on"
+                        size={24}
+                        color={colors.primary}
+                      />
+                    ) : (
+                      <Ionicons
+                        name="radio-button-off"
+                        size={24}
+                        color={colors.gray}
+                      />
+                    )}
+                    <Text
+                      style={{
+                        fontFamily: "Roboto_400",
+                        fontSize: fontSize.medium,
+                        marginLeft: 5,
+                      }}
+                    >
+                      {item.reason}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <View style={{ alignItems: "center" }}>
+              <TouchableOpacity
+                activeOpacity={0.6}
+                style={styles.boxConfirm}
+                onPress={handleConfirm}
+              >
+                <Text style={styles.textConfirm}>Confirm</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+          <ArrowButton
+            style={styles.buttonClose}
+            onPress={() => handleClose()}
+            type="close"
+          />
+        </View>
+      </Animated.View>
     </SafeAreaView>
   );
 };

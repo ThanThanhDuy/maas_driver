@@ -1,11 +1,13 @@
 import tripStatusApi from "../apis/tripStatus";
 
 class TripStatusService {
-  async updateTripStatus(bookingDetailDriverCode, status) {
+  async updateTripStatus(bookingDetailDriverCode, status, latitude, longitude) {
     try {
       let params = {
         BookingDetailDriverCode: bookingDetailDriverCode,
         TripStatus: status,
+        Latitude: latitude,
+        Longitude: longitude,
       };
       var response = await tripStatusApi.updateTripStatus(params);
     } catch (error) {
