@@ -15,8 +15,8 @@ import { appTheme, colors, COMMONS, fontSize } from "../../constants";
 import createStyle from "./style";
 import numberWithCommas from "../../utils/numberWithCommas";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRecoilState, useSetRecoilState } from "recoil";
-import { HubConnectionBuilder, Subject } from "@microsoft/signalr";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+import { Subject } from "@microsoft/signalr";
 import messageRoomsService from "../../services/messageRoom";
 import { ActivityIndicator } from "react-native-paper";
 
@@ -24,7 +24,7 @@ import {
   bookingSelected,
   isUserWorking,
   loadMessageState,
-  userState,
+  subjectState,
 } from "../../store";
 import * as Location from "expo-location";
 import { useIsFocused } from "@react-navigation/native";
@@ -32,6 +32,11 @@ import StarRating from "react-native-star-rating-widget";
 import scheduleService from "../../services/Schedule";
 import moment from "moment";
 import { FORMAT } from "../../constants/format";
+import userService from "../../services/user";
+import {
+  connectSocketChat,
+  connectSocketLocation,
+} from "../../services/socket";
 
 export const Home = ({ navigation }) => {
   const styles = createStyle();
@@ -39,14 +44,14 @@ export const Home = ({ navigation }) => {
   const [region, setRegion] = useState({});
   const [_isWorking, _setIsWorking] = useState(false);
   const [_isLoading, _setIsLoading] = useState(false);
-  const [user, setUser] = useRecoilState(userState);
   const _setLoadMessage = useSetRecoilState(loadMessageState);
-  const [subject, setSubject] = useState(undefined);
+  const [subject, setSubject] = useRecoilState(subjectState);
   const [_user, _setUser] = useState(undefined);
   const [_nextTrip, _setNextTrip] = useState(undefined);
   const [_loadingTrip, _setLoadingTrip] = useState(false);
   const _setBookingSelected = useSetRecoilState(bookingSelected);
   const _setIsUserWorking = useSetRecoilState(isUserWorking);
+  const isUserWorkingState = useRecoilValue(isUserWorking);
   const isFocused = useIsFocused();
 
   useEffect(() => {
@@ -67,33 +72,39 @@ export const Home = ({ navigation }) => {
       }
     })();
     _handleConnect();
+    handleNextTrip(true);
     _loadProfile();
   }, []);
 
-  useEffect(() => {
-    const handleNextTrip = async () => {
-      _setLoadingTrip(true);
-      const respone = await scheduleService.getScheduleByDate(
-        1,
-        1,
-        moment(new Date()).format(FORMAT.DATE),
-        moment(new Date()).format(FORMAT.DATE)
-      );
-      if (respone.StatusCode === 200) {
-        if (respone?.Data?.Items[0]?.RouteRoutines.length > 0) {
-          _setNextTrip(respone.Data.Items[0].RouteRoutines[0]);
-        }
+  const handleNextTrip = async isLoading => {
+    isLoading && _setLoadingTrip(true);
+    const respone = await scheduleService.getScheduleByDate(
+      1,
+      1,
+      moment(new Date()).format(FORMAT.DATE),
+      moment(new Date()).format(FORMAT.DATE)
+    );
+    if (respone.StatusCode === 200) {
+      if (respone?.Data?.Items[0]?.RouteRoutines.length > 0) {
+        _setNextTrip(respone.Data.Items[0].RouteRoutines[0]);
       }
-      _setLoadingTrip(false);
-    };
-    handleNextTrip();
+    }
+    isLoading && _setLoadingTrip(false);
+  };
+
+  useEffect(() => {
+    handleNextTrip(false);
+    if (isUserWorkingState) {
+      _setIsWorking(isUserWorkingState);
+    }
+    _loadProfile();
   }, [isFocused]);
 
   const _loadProfile = async () => {
-    const userStorage = await AsyncStorage.getItem("User");
-    _setUser(JSON.parse(userStorage));
-    if (!user) {
-      setUser(userStorage);
+    const res = await userService.getProfile();
+    if (res && res.StatusCode === 200) {
+      _setUser(res.Data);
+      await AsyncStorage.setItem("User", JSON.stringify(res?.Data));
     }
   };
 
@@ -108,16 +119,7 @@ export const Home = ({ navigation }) => {
         const localAccessToken = await AsyncStorage.getItem("AccessToken");
         if (localAccessToken) {
           const accessToken = JSON.parse(localAccessToken);
-          newConnectionLocation = new HubConnectionBuilder()
-            .withUrl(`${COMMONS.PREFIX_SOCKET}${COMMONS.SOCKET_LOCATION}`, {
-              headers: {
-                "Access-Control-Allow-Origin": "*",
-              },
-              withCredentials: false,
-              accessTokenFactory: () => `${accessToken}`,
-            })
-            .withAutomaticReconnect()
-            .build();
+          newConnectionLocation = connectSocketLocation(accessToken);
           await newConnectionLocation.start();
           try {
             const _subject = new Subject();
@@ -144,9 +146,10 @@ export const Home = ({ navigation }) => {
                 longitude: location.coords.longitude,
               };
               setRegion(regionTmp);
-              console.log("send");
+              console.log("🚀 ~ Send Location ~ Home");
               _subject.next(coordinates);
             }, COMMONS.TIME_SEND_LOCATION);
+            console.log("🚀 ~ Interval ~ Home", myInterval);
           } catch (error) {
             console.log(error);
           }
@@ -174,17 +177,7 @@ export const Home = ({ navigation }) => {
     const localAccessToken = await AsyncStorage.getItem("AccessToken");
     if (localAccessToken) {
       const accessToken = JSON.parse(localAccessToken);
-      const newConnection = new HubConnectionBuilder()
-        .withUrl(`${COMMONS.PREFIX_SOCKET}${COMMONS.SOCKET_CHAT}`, {
-          headers: {
-            "Access-Control-Allow-Origin": "*",
-          },
-          withCredentials: false,
-          accessTokenFactory: () => `${accessToken}`,
-        })
-        .withAutomaticReconnect()
-        .build();
-
+      newConnection = connectSocketChat(accessToken);
       await newConnection.start();
       try {
         await newConnection.invoke("Login");
@@ -233,19 +226,21 @@ export const Home = ({ navigation }) => {
           </TouchableOpacity>
           <View style={styles.wrapperContent}>
             <Text style={styles.text}>
-              {_isWorking ? "Working" : "Not working"}
+              {isUserWorkingState ? "Working" : "Not working"}
             </Text>
             <Octicons
               name="dot-fill"
               size={24}
-              color={_isWorking ? colors.primary : colors.red}
+              color={isUserWorkingState ? colors.primary : colors.red}
             />
           </View>
           <View>
             <TouchableOpacity
               style={[
                 {
-                  backgroundColor: _isWorking ? colors.primary : colors.white,
+                  backgroundColor: isUserWorkingState
+                    ? colors.primary
+                    : colors.white,
                 },
                 styles.buttonTurn,
               ]}
@@ -255,13 +250,13 @@ export const Home = ({ navigation }) => {
               {_isLoading ? (
                 <ActivityIndicator
                   size={34}
-                  color={_isWorking ? colors.white : colors.primary}
+                  color={isUserWorkingState ? colors.white : colors.primary}
                 />
               ) : (
                 <Ionicons
                   name="power"
                   size={32}
-                  color={_isWorking ? colors.white : colors.text}
+                  color={isUserWorkingState ? colors.white : colors.text}
                   style={{ paddingLeft: 2.4 }}
                 />
               )}
@@ -303,7 +298,9 @@ export const Home = ({ navigation }) => {
           <Text style={styles.textWallet}>Account ViWallet</Text>
           <View style={{ flexDirection: "row" }}>
             <Text style={styles.textMoney}>
-              {numberWithCommas(parseFloat(_user?.Wallet?.Balance))}
+              {numberWithCommas(
+                parseFloat(_user?.Wallet?.Balance ? _user?.Wallet?.Balance : 0)
+              )}
             </Text>
             <Text style={styles.vnd}>VND</Text>
           </View>

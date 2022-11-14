@@ -10,6 +10,7 @@ import { appTheme, colors } from "../../../constants";
 import { styles } from "./styles";
 import driverService from "../../../services/driver";
 import { ActivityIndicator } from "react-native-paper";
+import tokenService from "../../../services/token";
 
 GoogleSignin.configure({
   webClientId:
@@ -31,10 +32,7 @@ export const Login = ({ navigation }) => {
     const res = await driverService.login(accessTokenFirebase);
 
     if (res && res?.StatusCode === 200) {
-      await AsyncStorage.setItem(
-        "AccessToken",
-        JSON.stringify(res?.Data.AccessToken)
-      );
+      tokenService.updateToken(res?.Data.AccessToken, res?.Data.RefreshToken);
       await AsyncStorage.setItem("User", JSON.stringify(res?.Data.User));
       navigation.navigate("Auth");
     } else {

@@ -3,8 +3,10 @@ import { View, Image } from "react-native";
 import { LOGO } from "../../../assets";
 import { styles } from "./style";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useIsFocused } from "@react-navigation/native";
 
 export const WelCome = ({ navigation }) => {
+  const isFocused = useIsFocused();
   // check account
   useEffect(() => {
     const checkLogin = async () => {
@@ -21,7 +23,7 @@ export const WelCome = ({ navigation }) => {
       }
     };
     checkLogin();
-  }, []);
+  }, [isFocused]);
 
   return (
     <View style={styles.container}>

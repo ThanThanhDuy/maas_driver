@@ -1,7 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import queryString from "query-string";
-
+import * as RootNavigation from "../navigation/rootNavigation";
+import tokenService from "../services/token";
 //config
 const axiosClient = axios.create({
   baseURL: "https://vigo-application.herokuapp.com/api/v1/",
@@ -29,8 +30,36 @@ axiosClient.interceptors.response.use(
 
     return response;
   },
-  error => {
-    throw error.response.data;
+  async error => {
+    const currentScreen =
+      RootNavigation.navigationRef.current.getCurrentRoute().name;
+    const originalConfig = error.config;
+    if (currentScreen !== "Login" && error.response) {
+      if (err.response.data.StatusCode === 401 && !originalConfig._retry) {
+        originalConfig._retry = true;
+        try {
+          console.log("REFRESH TOKEN");
+          const localAccessToken = tokenService.getAccessToken();
+          const localRefreshToken = tokenService.getRefreshToken();
+          if (localAccessToken) {
+            const rs = await instance.post("accounts/refresh-token", {
+              AccessToken: localAccessToken,
+              RefreshToken: localRefreshToken,
+            });
+
+            const { token, refreshToken } = rs.Data;
+            tokenService.updateToken(token, refreshToken);
+            return instance(originalConfig);
+          } else {
+            RootNavigation.navigationRef.navigate("Login");
+          }
+        } catch (_error) {
+          throw _error;
+        }
+      }
+    } else {
+      throw error.response.data;
+    }
   }
 );
 export default axiosClient;
