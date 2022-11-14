@@ -118,8 +118,8 @@ export const CreateRouteRoutine = ({ navigation }) => {
       TIME_CREATE_ROUTE.END_TIME_TO_ADD_ROUTE
     );
     if (checkTimeBeforeLimit) {
-      _setDateFrom(moment(new Date()).toDate());
-      let dateTo = moment(new Date()).add(6, "days").toDate();
+      _setDateFrom(moment(new Date()).add(1, "days").toDate());
+      let dateTo = moment(new Date()).add(7, "days").toDate();
       if (moment(dateTo).format("M") !== getCurrentMonth()) {
         dateTo = moment().endOf("month").toDate();
       }
@@ -127,8 +127,8 @@ export const CreateRouteRoutine = ({ navigation }) => {
       _setMaximunDate(moment().endOf("month").toDate());
       _setMinimumDate(moment(new Date()).toDate());
     } else {
-      _setDateFrom(moment(new Date()).add(1, "days").toDate());
-      let dateTo = moment(new Date()).add(7, "days").toDate();
+      _setDateFrom(moment(new Date()).add(2, "days").toDate());
+      let dateTo = moment(new Date()).add(8, "days").toDate();
       if (moment(dateTo).format("M") !== getCurrentMonth()) {
         dateTo = moment().endOf("month").toDate();
       }
@@ -694,6 +694,7 @@ export const CreateRouteRoutine = ({ navigation }) => {
                       width: 160,
                       marginTop: 30,
                     }}
+                    minuteInterval={5}
                   />
                 </View>
                 <View style={styles.bottomControl}>

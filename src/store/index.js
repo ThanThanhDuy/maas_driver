@@ -7,6 +7,7 @@ import { bookingSelected } from "./booking";
 import { userState, isUserWorking } from "./user";
 import { routeSelected } from "./route";
 import { showToastCancel } from "./commons";
+import { subjectState } from "./location";
 
 export {
   messageState,
@@ -17,4 +18,5 @@ export {
   isUserWorking,
   routeSelected,
   showToastCancel,
+  subjectState,
 };

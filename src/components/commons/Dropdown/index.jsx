@@ -28,6 +28,7 @@ export const Dropdown = props => {
     minimumDate = new Date(),
     maximumDate,
     date = new Date(),
+    minuteInterval = 1,
   } = props;
 
   const [_date, _setDate] = useState(new Date());
@@ -111,6 +112,7 @@ export const Dropdown = props => {
                 open={_open}
                 date={date}
                 mode="time"
+                minuteInterval={minuteInterval}
                 onConfirm={date => {
                   _setOpen(false);
                   _setDate(date);

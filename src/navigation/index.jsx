@@ -15,12 +15,13 @@ import { Auth } from "./auth";
 import { ChatDetail } from "../features/mailBox/ChatDetail";
 import { History } from "../features/income/history";
 import { Success } from "../components";
+import { navigationRef } from "./rootNavigation";
 
 const Root = createNativeStackNavigator();
 
 function NavigatorRoot() {
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <Root.Navigator
         screenOptions={{
           headerShown: false,
