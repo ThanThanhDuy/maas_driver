@@ -22,7 +22,7 @@ export const MailBox = ({ navigation }) => {
 
   const isFocused = useIsFocused();
 
-  const handleMessage = async response => {
+  const handleMessage = async (response) => {
     if (response && response.StatusCode === 200 && response?.Data) {
       _setIsNoChat(false);
       let listChatRes = response.Data;
@@ -102,7 +102,7 @@ export const MailBox = ({ navigation }) => {
         level="h5"
         style={{ marginLeft: 10, marginTop: 10, fontFamily: "Roboto_500" }}
       />
-      <ActionBox />
+      <ActionBox navigation={navigation} />
       <Title
         title="Your chats"
         level="h5"

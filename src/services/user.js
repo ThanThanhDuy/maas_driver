@@ -1,12 +1,13 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import userApi from "../apis/user";
+import { checkToken } from "../firebase/notification";
 
 class UserService {
-  async getProfile(FCMToken = null) {
+  async getProfile() {
     const params = {
-      FCMToken,
+      FCMToken: await checkToken(),
     };
-
+    console.log(params);
     try {
       var response = await userApi.getProfile(params);
     } catch (error) {

@@ -9,6 +9,7 @@ import {
   Driving,
   Profile,
   WelCome,
+  Notification,
 } from "../features";
 import { NotAuth } from "./not_auth";
 import { Auth } from "./auth";
@@ -73,6 +74,11 @@ function NavigatorRoot() {
         <Root.Screen
           name="DetailRoute"
           component={DetailRoute}
+          options={{ gestureEnabled: false }}
+        ></Root.Screen>
+        <Root.Screen
+          name="Notification"
+          component={Notification}
           options={{ gestureEnabled: false }}
         ></Root.Screen>
       </Root.Navigator>

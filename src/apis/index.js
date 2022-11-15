@@ -10,10 +10,10 @@ const axiosClient = axios.create({
     "content-type": "application/json",
     "Content-Type": "multipart/form-data",
   },
-  paramsSerializer: params => queryString.stringify(params),
+  paramsSerializer: (params) => queryString.stringify(params),
 });
 
-axiosClient.interceptors.request.use(async config => {
+axiosClient.interceptors.request.use(async (config) => {
   const localAccessToken = await AsyncStorage.getItem("AccessToken");
   if (localAccessToken) {
     const accessToken = JSON.parse(localAccessToken);
@@ -23,14 +23,15 @@ axiosClient.interceptors.request.use(async config => {
 });
 
 axiosClient.interceptors.response.use(
-  response => {
+  (response) => {
     if (response && response.data) {
       return response.data;
     }
 
     return response;
   },
-  async error => {
+  async (error) => {
+    console.log(error.response.data);
     if (error.response.data.StatusCode === 401) {
       const currentScreen =
         RootNavigation.navigationRef.current.getCurrentRoute().name;

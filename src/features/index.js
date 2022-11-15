@@ -10,6 +10,7 @@ import { Driving } from "./driving";
 import { DriverSetting } from "./driverSetting";
 import { CreateRouteRoutine } from "./createRouteRoutine";
 import { DetailRoute } from "./detailRoute";
+import { Notification } from "./mailBox/Notification";
 
 export {
   WelCome,
@@ -24,4 +25,5 @@ export {
   DriverSetting,
   CreateRouteRoutine,
   DetailRoute,
+  Notification,
 };

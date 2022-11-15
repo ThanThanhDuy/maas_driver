@@ -9,17 +9,18 @@ const Actions = [
     icon: <Ionicons name="mail" size={32} color="white" />,
     title: "Inbox",
     color: colors.organeV2,
+    page: "Notification",
   },
-  {
-    icon: (
-      <MaterialCommunityIcons name="comment-question" size={32} color="white" />
-    ),
-    title: "Help tickets",
-    color: colors.greenV2,
-  },
+  // {
+  //   icon: (
+  //     <MaterialCommunityIcons name="comment-question" size={32} color="white" />
+  //   ),
+  //   title: "Help tickets",
+  //   color: colors.greenV2,
+  // },
 ];
 
-export const ActionBox = () => {
+export const ActionBox = ({ navigation }) => {
   return (
     <View style={styles.wrappBox}>
       {Actions.map((item, index) => (
@@ -32,6 +33,9 @@ export const ActionBox = () => {
             style={{
               backgroundColor: item.color,
               ...styles.wrappIcon,
+            }}
+            onPress={() => {
+              navigation.navigate("Notification");
             }}
           >
             {item.icon}
