@@ -17,11 +17,18 @@ import { appTheme, colors, fontSize } from "./src/constants";
 import { useNetInfo } from "@react-native-community/netinfo";
 import { useEffect, useState } from "react";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import {
+  notificationListener,
+  requestUserPermission,
+} from "./src/firebase/notification";
+import FlashMessage from "react-native-flash-message";
 
 export default function App() {
   const { isConnected } = useNetInfo();
   const [connected, setConnected] = useState(true);
   useEffect(() => {
+    requestUserPermission();
+    notificationListener();
     setConnected(isConnected);
   }, [isConnected]);
 
@@ -43,6 +50,7 @@ export default function App() {
     return (
       <RecoilRoot>
         <View style={styles.container}>
+          <FlashMessage position="top" />
           <NavigatorRoot />
           {!connected && (
             <View style={styles.boxConnect}>

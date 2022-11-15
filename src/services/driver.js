@@ -13,6 +13,19 @@ class DriverService {
     }
     return response;
   }
+  async getNotifications(page) {
+    const params = {
+      Page: page,
+      PageSize: 10,
+    };
+
+    try {
+      var response = await driverApi.getNotifications(params);
+    } catch (error) {
+      return error;
+    }
+    return response;
+  }
 }
 
 const driverService = new DriverService();

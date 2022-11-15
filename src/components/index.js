@@ -16,6 +16,7 @@ import { WrapperContent } from "./commons/WrapperContent";
 import { StepDriving } from "./commons/StepDriving";
 import { Success } from "./commons/Success";
 import { Search } from "./commons/Search";
+import { TabItem } from "./commons/TabItem";
 
 export {
   Button,
@@ -36,4 +37,5 @@ export {
   StepDriving,
   Success,
   Search,
+  TabItem,
 };

@@ -29,7 +29,7 @@ export const ChatDetail = ({ navigation, route }) => {
   const [_nameBooker, _setNameBooker] = useState(null);
   const loadMessage = useRecoilValue(loadMessageState);
 
-  const handleRenderMessage = async data => {
+  const handleRenderMessage = async (data) => {
     let listMessage = [];
     let userCodeDriver;
     const userCurrentLocal = await AsyncStorage.getItem("User");
@@ -72,11 +72,13 @@ export const ChatDetail = ({ navigation, route }) => {
     })();
   }, [loadMessage]);
 
-  const sendMessage = async message => {
+  const sendMessage = async (message) => {
     const roomCode = route.params.roomCode;
     const roomType = route.params.roomType;
     if (message.trim() !== "") {
-      await messageService.sendMessage(roomCode, message.trim());
+      let text = message.trim();
+      _setTextInput("");
+      await messageService.sendMessage(roomCode, text);
       const response = await messageRoomsService.getMessageRooms(
         roomType,
         roomCode
@@ -84,7 +86,6 @@ export const ChatDetail = ({ navigation, route }) => {
       if (response && response.StatusCode === 200) {
         await handleRenderMessage(response.Data[0]);
       }
-      _setTextInput("");
     }
   };
 
@@ -131,7 +132,7 @@ export const ChatDetail = ({ navigation, route }) => {
                   _setTextInput("");
                 }}
                 value={_textInput}
-                onChange={event => _setTextInput(event.nativeEvent.text)}
+                onChange={(event) => _setTextInput(event.nativeEvent.text)}
               />
               <TouchableOpacity
                 activeOpacity={0.7}
