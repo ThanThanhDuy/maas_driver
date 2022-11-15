@@ -15,6 +15,8 @@ const carIcon = require("./icons/car.png");
 const car4 = require("./icons/vehicle/car4.png");
 const car7 = require("./icons/vehicle/car7.png");
 const bike = require("./icons/vehicle/bike.png");
+const pickUp = require("./icons/pickUp.png");
+const dropOff = require("./icons/dropOff.png");
 
 export const LOGO = {
   logo,
@@ -38,4 +40,6 @@ export const ICONS = {
   car4,
   car7,
   bike,
+  pickUp,
+  dropOff,
 };

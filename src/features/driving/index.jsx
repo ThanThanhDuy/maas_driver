@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Text,
   RefreshControl,
+  Image,
 } from "react-native";
 import React, {
   useCallback,
@@ -40,6 +41,7 @@ import { REASON_HELP } from "../../constants/reasonHelp";
 import { Ionicons } from "@expo/vector-icons";
 import { ArrowButton } from "../../components/commons/ArrowButton";
 import * as Location from "expo-location";
+import { ICONS } from "../../assets";
 
 export const Driving = ({ navigation }) => {
   const _bookingSelected = useRecoilValue(bookingSelected);
@@ -124,7 +126,7 @@ export const Driving = ({ navigation }) => {
     handleData();
     if (_bookingSelected.Steps.length > 2) {
       let listPoint = [];
-      for (let index = 1; index < _bookingSelected.Steps.length - 2; index++) {
+      for (let index = 1; index < _bookingSelected.Steps.length - 1; index++) {
         listPoint.push({
           latitudeDelta: 0.01793054891924406,
           longitudeDelta: 0.009999999999990905,
@@ -211,7 +213,11 @@ export const Driving = ({ navigation }) => {
         ) {
           Alert.alert(
             "Location is too far",
-            "Your location is too far from the drop off point, please approach the drop off point",
+            `Your location is too far from the ${
+              res?.Message.includes("start station") ? "pick up" : "drop off"
+            } point, please approach the ${
+              res?.Message.includes("start station") ? "pick up" : "drop off"
+            } point`,
             [
               {
                 text: "OK",
@@ -245,19 +251,19 @@ export const Driving = ({ navigation }) => {
     );
     if (respone.StatusCode === 200 && respone.Data) {
       for (const item of respone.Data.Items[0].RouteRoutines) {
-        for (const itemSchedule of item.Schedules) {
-          if (itemSchedule.Time === _bookingSelected.Time) {
-            _setBookingSelected({
-              ...item,
-              Date: respone.Data.Items[0].Date,
-              Time: itemSchedule.Time,
-            });
-          }
+        if (item.StartTime === _bookingSelected.StartTime) {
+          _setBookingSelected({
+            ...item,
+            Date: respone.Data.Items[0].Date,
+          });
+          refreshingControl && _setRefreshingControl(false);
+          return item;
         }
       }
     }
     isLoading && _setRefresh(false);
     refreshingControl && _setRefreshingControl(false);
+    return null;
   };
 
   function onPressRadioButton(index) {
@@ -324,7 +330,18 @@ export const Driving = ({ navigation }) => {
                   );
                   // console.log("🚀 ~ DRIVING ~ ", res);
                   if (res && res.StatusCode === 200) {
-                    handleRefresh();
+                    const result = await handleRefresh();
+                    if (!result) {
+                      navigation.navigate("Success");
+                      _setStatusSwipe({
+                        text: `Finish`,
+                        color: colors.primary,
+                      });
+                      _setListStep([]);
+                      _setIsLoadingChangeStep(false);
+                      forceResetLastButton && forceResetLastButton();
+                      handleClose();
+                    }
                   } else if (
                     res.StatusCode === 500 &&
                     res?.Message.includes("Your location must be within")
@@ -394,7 +411,12 @@ export const Driving = ({ navigation }) => {
               longitude: item.Longitude,
             }}
             title={item.StationName}
-          />
+          >
+            <Image
+              style={{ width: 40, height: 40 }}
+              source={item.Type === 0 ? ICONS.pickUp : ICONS.dropOff}
+            />
+          </Marker>
         ))}
         <MapViewDirections
           origin={{

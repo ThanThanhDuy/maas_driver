@@ -1,7 +1,7 @@
 import { ICONS } from "../../assets";
 
 export const vehicle = {
-  ViBike: ICONS.bike,
-  "ViCar Protect": ICONS.car4,
-  "ViCar XL Protect": ICONS.car7,
+  ViRide: ICONS.bike,
+  "ViCar-4": ICONS.car4,
+  "ViCar-7": ICONS.car7,
 };
