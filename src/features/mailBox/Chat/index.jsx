@@ -59,7 +59,7 @@ export const Chat = ({ _listChat, _handleSelectChatBox }) => {
                       opacity: 0.5,
                     }}
                   >
-                    {item.lastedText}
+                    {item.lastedText ? item.lastedText : "No messages"}
                   </Text>
                   {item.lastedTime !== "" &&
                     moment(moment(item.lastedTime, FORMAT.DATE_TIME)).isSame(
