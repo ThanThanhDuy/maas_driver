@@ -8,6 +8,7 @@ import {
 } from "@expo/vector-icons";
 import { colors } from "../../../constants";
 import { styles } from "./style";
+import { getHour } from "../../../utils/getDate";
 
 export const StepDriving = ({ step, index, maxLength }) => {
   const callNumber = phone => {
@@ -39,7 +40,9 @@ export const StepDriving = ({ step, index, maxLength }) => {
           </View>
           <View style={styles.boxUser}>
             <View style={styles.boxInline}>
-              <Text style={styles.textUser}>{step.UserName}</Text>
+              <Text style={styles.textUser}>
+                {step.UserName} - {getHour(step?.Time, "HH:mm:ss")}
+              </Text>
             </View>
             <View style={styles.boxInline}>
               <TouchableOpacity

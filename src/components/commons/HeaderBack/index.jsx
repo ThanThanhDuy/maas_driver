@@ -6,6 +6,7 @@ import { FontAwesome5, Ionicons } from "@expo/vector-icons";
 import { styles } from "./style";
 import { Avatar } from "../Avatar";
 import { colors } from "../../../constants";
+import { ActivityIndicator } from "react-native-paper";
 
 export const HeaderBack = props => {
   const {
@@ -18,6 +19,8 @@ export const HeaderBack = props => {
     isRefresh = false,
     isWarning = false,
     onRefresh = () => {},
+    onWarning = () => {},
+    refresh = false,
   } = props;
 
   const callNumber = () => {
@@ -28,7 +31,11 @@ export const HeaderBack = props => {
   };
 
   const handleRefresh = () => {
-    onRefresh();
+    onRefresh(true);
+  };
+
+  const handleWarning = () => {
+    onWarning();
   };
 
   return (
@@ -85,7 +92,7 @@ export const HeaderBack = props => {
       )}
       {isWarning && (
         <TouchableOpacity
-          onPress={handleRefresh}
+          onPress={handleWarning}
           activeOpacity={0.7}
           style={{
             marginRight: 10,
@@ -108,8 +115,13 @@ export const HeaderBack = props => {
             padding: 8,
             alignItems: "center",
           }}
+          onPress={handleRefresh}
         >
-          <Ionicons name="reload-outline" size={24} color={colors.primary} />
+          {refresh ? (
+            <ActivityIndicator size={24} color={colors.primary} />
+          ) : (
+            <Ionicons name="reload-outline" size={24} color={colors.primary} />
+          )}
         </TouchableOpacity>
       )}
     </View>

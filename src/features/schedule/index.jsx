@@ -31,31 +31,6 @@ export const Schedule = ({ navigation }) => {
 
   useEffect(() => {
     const getSchedule = async () => {
-      _setRefreshing(true);
-      const respone = await scheduleService.getScheduleByDate(
-        1,
-        5,
-        moment(_dateFrom).format(FORMAT.DATE),
-        moment(_dateTo).format(FORMAT.DATE)
-      );
-      if (respone.Data && respone.Data.Items && respone.Data.Items.length > 0) {
-        _setListSchedule([]);
-        _setListSchedule(respone?.Data.Items);
-        _setTotalCountPage(respone?.Data.TotalPagesCount);
-        _setHaveData(true);
-      } else {
-        _setHaveData(false);
-      }
-      _setRefreshing(false);
-      _setIsLoading(false);
-      _setPage(1);
-      _setCheckChangeTime(false);
-    };
-    getSchedule();
-  }, [isFocused]);
-
-  useEffect(() => {
-    const getSchedule = async () => {
       if (_page <= _totalCountPage && _checkChangeTime) {
         _setIsLoading(true);
         const respone = await scheduleService.getScheduleByDate(
@@ -85,6 +60,31 @@ export const Schedule = ({ navigation }) => {
     };
     getSchedule();
   }, [_page]);
+
+  useEffect(() => {
+    const getSchedule = async () => {
+      _setRefreshing(true);
+      _setCheckChangeTime(false);
+      const respone = await scheduleService.getScheduleByDate(
+        1,
+        5,
+        moment(_dateFrom).format(FORMAT.DATE),
+        moment(_dateTo).format(FORMAT.DATE)
+      );
+      if (respone.Data && respone.Data.Items && respone.Data.Items.length > 0) {
+        _setListSchedule([]);
+        _setListSchedule(respone?.Data.Items);
+        _setTotalCountPage(respone?.Data.TotalPagesCount);
+        _setHaveData(true);
+      } else {
+        _setHaveData(false);
+      }
+      _setRefreshing(false);
+      _setIsLoading(false);
+      _setPage(1);
+    };
+    getSchedule();
+  }, [isFocused]);
 
   useEffect(() => {
     isFocused && _setTabSelected("Schedule");

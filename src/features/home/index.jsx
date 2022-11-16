@@ -87,6 +87,8 @@ export const Home = ({ navigation }) => {
     if (respone.StatusCode === 200) {
       if (respone?.Data?.Items[0]?.RouteRoutines.length > 0) {
         _setNextTrip(respone.Data.Items[0].RouteRoutines[0]);
+      } else {
+        _setNextTrip(undefined);
       }
     }
     isLoading && _setLoadingTrip(false);
@@ -203,6 +205,7 @@ export const Home = ({ navigation }) => {
     _setBookingSelected({
       ..._nextTrip,
       Date: moment(new Date()).format(FORMAT.DATE),
+      Time: _nextTrip?.Schedules[0].Time,
     });
     navigation.navigate("BookingReceive");
   };

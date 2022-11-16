@@ -31,31 +31,35 @@ axiosClient.interceptors.response.use(
     return response;
   },
   async error => {
-    const currentScreen =
-      RootNavigation.navigationRef.current.getCurrentRoute().name;
-    const originalConfig = error.config;
-    if (currentScreen !== "Login" && error.response) {
-      if (err.response.data.StatusCode === 401 && !originalConfig._retry) {
-        originalConfig._retry = true;
-        try {
-          console.log("REFRESH TOKEN");
-          const localAccessToken = tokenService.getAccessToken();
-          const localRefreshToken = tokenService.getRefreshToken();
-          if (localAccessToken) {
-            const rs = await instance.post("accounts/refresh-token", {
-              AccessToken: localAccessToken,
-              RefreshToken: localRefreshToken,
-            });
+    if (error.response.data.StatusCode === 401) {
+      const currentScreen =
+        RootNavigation.navigationRef.current.getCurrentRoute().name;
+      const originalConfig = error.config;
+      if (currentScreen !== "Login") {
+        if (!originalConfig._retry) {
+          originalConfig._retry = true;
+          try {
+            console.log("REFRESH TOKEN");
+            const localAccessToken = tokenService.getAccessToken();
+            const localRefreshToken = tokenService.getRefreshToken();
+            if (localAccessToken) {
+              const rs = await instance.post("accounts/refresh-token", {
+                AccessToken: localAccessToken,
+                RefreshToken: localRefreshToken,
+              });
 
-            const { token, refreshToken } = rs.Data;
-            tokenService.updateToken(token, refreshToken);
-            return instance(originalConfig);
-          } else {
-            RootNavigation.navigationRef.navigate("Login");
+              const { token, refreshToken } = rs.Data;
+              tokenService.updateToken(token, refreshToken);
+              return instance(originalConfig);
+            } else {
+              RootNavigation.navigationRef.navigate("Login");
+            }
+          } catch (_error) {
+            throw _error;
           }
-        } catch (_error) {
-          throw _error;
         }
+      } else {
+        throw error.response.data;
       }
     } else {
       throw error.response.data;
