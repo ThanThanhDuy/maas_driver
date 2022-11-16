@@ -22,15 +22,15 @@ import { ActivityIndicator } from "react-native-paper";
 
 const _other = [
   {
-    title: "Rating",
+    title: "Income",
     icon: <AntDesign name="star" size={24} color={colors.text} />,
   },
   {
-    title: "Update document",
+    title: "Mailbox",
     icon: <Ionicons name="document-text" size={24} color={colors.text} />,
   },
   {
-    title: "Terms of cooperation",
+    title: "Schedule",
     icon: <Ionicons name="ios-person" size={24} color={colors.text} />,
   },
 ];

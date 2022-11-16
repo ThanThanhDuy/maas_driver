@@ -12,6 +12,10 @@ class DriverApi {
     const url = `${this.PREFIX}notifications`;
     return await axiosClient.get(url, params);
   }
+  async getIncomes(params) {
+    const url = `${this.PREFIX}incomes`;
+    return await axiosClient.get(url, { params });
+  }
 }
 
 const driverApi = new DriverApi();

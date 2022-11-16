@@ -56,6 +56,9 @@ export const MailBox = ({ navigation }) => {
         });
       }
       _setListChat(listChat);
+      if (listChat.length === 0) {
+        _setIsNoChat(true);
+      }
       _setIsLoading(false);
     } else {
       _setIsNoChat(true);

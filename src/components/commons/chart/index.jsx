@@ -2,15 +2,6 @@ import React from "react";
 import { BarChart } from "react-native-chart-kit";
 import { appTheme, colors } from "../../../constants";
 
-const data = {
-  labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-  datasets: [
-    {
-      data: [20, 45, 28, 80, 99, 43, 0],
-    },
-  ],
-};
-
 const chartConfig = {
   backgroundGradientFrom: "#fff",
   backgroundGradientTo: "#fff",
@@ -22,11 +13,19 @@ const chartConfig = {
   fillShadowGradientTo: colors.primary,
 };
 
-export const Chart = () => {
+export const Chart = (props) => {
+  const { data = [], label = [] } = props;
   return (
     <BarChart
       // style={graphStyle}
-      data={data}
+      data={{
+        labels: label,
+        datasets: [
+          {
+            data: data,
+          },
+        ],
+      }}
       width={appTheme.WIDTH - 0}
       height={220}
       chartConfig={chartConfig}
