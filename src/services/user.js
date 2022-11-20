@@ -27,6 +27,10 @@ class UserService {
   async removeUser() {
     await AsyncStorage.removeItem("User");
   }
+
+  async getUser() {
+    return JSON.parse(await AsyncStorage.getItem("User"));
+  }
 }
 
 const userService = new UserService();

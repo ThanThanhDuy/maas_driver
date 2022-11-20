@@ -39,6 +39,7 @@ import { ActivityIndicator } from "react-native-paper";
 import { useIsFocused } from "@react-navigation/native";
 import scheduleService from "../../services/Schedule";
 import { TIME_CANCEL_ROUTE } from "../../constants/timeCreateRoute";
+import userService from "../../services/user";
 
 export const BookingReceive = ({ navigation }) => {
   const _bookingSelected = useRecoilValue(bookingSelected);
@@ -50,6 +51,7 @@ export const BookingReceive = ({ navigation }) => {
   const [_canCancel, _setCanCancel] = useState(false);
   const [_loadingCancel, _setLoadingCancel] = useState(false);
   const [_reasonOther, _setReasonOther] = useState("");
+  const [_user, _setUser] = useState(null);
   const modalMotion = useRef(new Animated.Value(-350)).current;
   const setShowToastCancelState = useSetRecoilState(showToastCancel);
   const isFocused = useIsFocused();
@@ -107,15 +109,11 @@ export const BookingReceive = ({ navigation }) => {
       );
       if (respone.StatusCode === 200 && respone.Data) {
         for (const item of respone.Data.Items[0].RouteRoutines) {
-          for (const itemSchedule of item.Schedules) {
-            if (itemSchedule.Time === _bookingSelected.Time) {
-              console.log(itemSchedule.BookingDetailDriverCode);
-              _setBookingSelected({
-                ...item,
-                Date: respone.Data.Items[0].Date,
-                Time: itemSchedule.Time,
-              });
-            }
+          if (item.StartTime === _bookingSelected.StartTime) {
+            _setBookingSelected({
+              ...item,
+              Date: respone.Data.Items[0].Date,
+            });
           }
         }
       }
@@ -125,6 +123,13 @@ export const BookingReceive = ({ navigation }) => {
       TIME_CANCEL_ROUTE.DAY_BEFORE_TO_CAN_CANCEL,
       TIME_CANCEL_ROUTE.END_TIME_TO_CANCEL
     );
+    const handleGetUser = async () => {
+      const user = await userService.getUser();
+      if (user) {
+        _setUser(user);
+      }
+    };
+    handleGetUser();
   }, [isFocused]);
 
   function onPressRadioButton(index) {
@@ -208,6 +213,25 @@ export const BookingReceive = ({ navigation }) => {
   };
 
   const onRefresh = () => {
+    const handleLoad = async () => {
+      const respone = await scheduleService.getScheduleByDate(
+        1,
+        1,
+        _bookingSelected.Date,
+        _bookingSelected.Date
+      );
+      if (respone.StatusCode === 200 && respone.Data) {
+        for (const item of respone.Data.Items[0].RouteRoutines) {
+          if (item.StartTime === _bookingSelected.StartTime) {
+            _setBookingSelected({
+              ...item,
+              Date: respone.Data.Items[0].Date,
+            });
+          }
+        }
+      }
+    };
+    handleLoad();
     compareTimeStart(
       TIME_CANCEL_ROUTE.DAY_BEFORE_TO_CAN_CANCEL,
       TIME_CANCEL_ROUTE.END_TIME_TO_CANCEL
@@ -280,8 +304,11 @@ export const BookingReceive = ({ navigation }) => {
         >
           <HeaderBack navigation={navigation} title="Schedule" />
           <View style={styles.typeVehicle}>
-            <Image source={vehicle["ViBike"]} style={styles.imgVehicle} />
-            <Text style={styles.textVehicle}>ViBike</Text>
+            <Image
+              source={vehicle[_user?.Vehicle.Type]}
+              style={styles.imgVehicle}
+            />
+            <Text style={styles.textVehicle}>{_user?.Vehicle.Type}</Text>
           </View>
 
           <ScrollView

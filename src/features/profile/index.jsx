@@ -69,24 +69,29 @@ export const Profile = ({ navigation }) => {
       {
         text: "Yes",
         onPress: async () => {
-          _setLoading(true);
-          const res = await userService.logout();
-          if (res && res.StatusCode === 200) {
-            if (isUserWorkingState) {
-              setIsUserWorking(false);
-              subject?.complete();
-              clearInterval(myInterval); // myInterval from home screen when working (send location)
-              console.log("🚀 ~ Interval ~ Loug out", myInterval);
-            }
-            await newConnection.invoke("Logout"); // newConnection from home screen (chat)
-            tokenService.removeToken();
-            userService.removeUser();
-            setTimeout(() => {
-              navigation.navigate("WelCome");
+          try {
+            _setLoading(true);
+            const res = await userService.logout();
+            if (res && res.StatusCode === 200) {
+              if (isUserWorkingState) {
+                setIsUserWorking(false);
+                subject?.complete();
+                clearInterval(myInterval); // myInterval from home screen when working (send location)
+                console.log("🚀 ~ Interval ~ Loug out", myInterval);
+              }
+              await newConnection.invoke("Logout"); // newConnection from home screen (chat)
+              tokenService.removeToken();
+              userService.removeUser();
+              setTimeout(() => {
+                navigation.navigate("WelCome");
+                _setLoading(false);
+                console.log("🚀 ~ LOG OUT");
+              }, 1000);
+            } else {
               _setLoading(false);
-              console.log("🚀 ~ LOG OUT");
-            }, 1000);
-          } else {
+            }
+          } catch (error) {
+            Alert.alert("Log out failed", error);
             _setLoading(false);
           }
         },
