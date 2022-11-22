@@ -73,15 +73,19 @@ export const CreateRouteRoutine = ({ navigation }) => {
   const [_openModal, _setOpenModal] = useState(false);
   const [_isShow, _setIsShow] = useState(false);
   const [_routeSelected, _setRouteSelected] = useState({});
-  const [_dateFrom, _setDateFrom] = useState(moment(new Date()).toDate());
+  const [_dateFrom, _setDateFrom] = useState(
+    new Date(moment(new Date(), "MM-DD-YYYY").add(1, "days"))
+  );
   const [_dateTo, _setDateTo] = useState(
     moment(new Date()).add(7, "days").toDate()
   );
   const [_maximunDate, _setMaximunDate] = useState(
     moment().endOf("month").toDate()
   );
-  const [_minimumDate, _setMinimumDate] = useState(moment(new Date()).toDate());
-  const [_time, _setTime] = useState(new Date());
+  const [_minimumDate, _setMinimumDate] = useState(
+    new Date(moment(new Date(), "MM/DD/YYYY").add(1, "days"))
+  );
+  const [_time, _setTime] = useState(new Date(new Date().setHours(6, 0, 0)));
   const bottomSheetModalRef = useRef(null);
   const snapPoints = [420, 120];
   const [selectedItem, setSelectedItem] = useState(null);
@@ -142,7 +146,7 @@ export const CreateRouteRoutine = ({ navigation }) => {
     const handleGetStation = async () => {
       const res = await stationService.getAllStation();
       if (res && res.StatusCode === 200) {
-        const newListStation = res?.Data.map(item => {
+        const newListStation = res?.Data.map((item) => {
           return {
             id: item.Code,
             title: item.Name,
@@ -173,7 +177,7 @@ export const CreateRouteRoutine = ({ navigation }) => {
     }
   };
 
-  const handleSheetChanges = useCallback(index => {
+  const handleSheetChanges = useCallback((index) => {
     if (index < 0) {
       _setOpenModal(false);
     }
@@ -215,7 +219,7 @@ export const CreateRouteRoutine = ({ navigation }) => {
     ]);
   };
 
-  const handleSelectedItem = item => {
+  const handleSelectedItem = (item) => {
     if (item) {
       setSelectedItem(item);
       setIndexBottomSheet(1);
@@ -236,14 +240,14 @@ export const CreateRouteRoutine = ({ navigation }) => {
     handleGetRoute("", "Ops! Route list is being updated");
   };
 
-  const handleViewDetail = item => {
+  const handleViewDetail = (item) => {
     _setRouteSelectedState(item);
     navigation.navigate("DetailRoute", {
       fromScreen: "Choose route",
     });
   };
 
-  const handleChangeSegment = index => {
+  const handleChangeSegment = (index) => {
     if (_canChooseNextMonth) {
       if (index === TAB_SEGMENT.THIS_MONTH) {
         _setSelectedIndexSegment(TAB_SEGMENT.THIS_MONTH);
@@ -277,7 +281,8 @@ export const CreateRouteRoutine = ({ navigation }) => {
       }
     }
   };
-
+  console.log("ss");
+  console.log(new Date(moment(new Date(), "MM/DD/YYYY").add(1, "days")));
   return (
     <View style={styles.container}>
       <KeyboardAvoidingView
@@ -533,7 +538,7 @@ export const CreateRouteRoutine = ({ navigation }) => {
                     }}
                   >
                     <AutocompleteDropdown
-                      controller={controller => {
+                      controller={(controller) => {
                         dropdownController.current = controller;
                       }}
                       containerStyle={{ marginHorizontal: 20 }}
@@ -552,7 +557,7 @@ export const CreateRouteRoutine = ({ navigation }) => {
                       clearOnFocus={true}
                       showClear={true}
                       showChevron={false}
-                      onSelectItem={item => handleSelectedItem(item)}
+                      onSelectItem={(item) => handleSelectedItem(item)}
                       dataSet={_listStation}
                       suggestionsListMaxHeight={
                         indexBottomSheet === 0 ? 300 : 50
@@ -619,7 +624,7 @@ export const CreateRouteRoutine = ({ navigation }) => {
                     }
                     selectedIndex={_selectedIndexSegment}
                     activeFontStyle={{ color: colors.white }}
-                    onChange={event =>
+                    onChange={(event) =>
                       handleChangeSegment(
                         event.nativeEvent.selectedSegmentIndex
                       )
@@ -636,7 +641,7 @@ export const CreateRouteRoutine = ({ navigation }) => {
                       label="From"
                       mode="date"
                       date={_dateFrom}
-                      onDoneValue={date => {
+                      onDoneValue={(date) => {
                         _setDateFrom(date);
                       }}
                       IconFront={
@@ -650,14 +655,18 @@ export const CreateRouteRoutine = ({ navigation }) => {
                         backgroundColor: colors.transparent,
                         width: 160,
                       }}
-                      minimumDate={_minimumDate}
+                      minimumDate={
+                        new Date(
+                          moment(new Date(), "MM/DD/YYYY").add(1, "days")
+                        )
+                      }
                       maximumDate={_maximunDate}
                     />
                     <Dropdown
                       label="To"
                       mode="date"
                       date={_dateTo}
-                      onDoneValue={date => {
+                      onDoneValue={(date) => {
                         _setDateTo(date);
                       }}
                       IconFront={
@@ -679,7 +688,7 @@ export const CreateRouteRoutine = ({ navigation }) => {
                     label="Time start"
                     mode="time"
                     date={_time}
-                    onDoneValue={date => {
+                    onDoneValue={(date) => {
                       _setTime(date);
                     }}
                     IconFront={
