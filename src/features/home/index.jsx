@@ -76,7 +76,7 @@ export const Home = ({ navigation }) => {
     _loadProfile();
   }, []);
 
-  const handleNextTrip = async isLoading => {
+  const handleNextTrip = async (isLoading) => {
     isLoading && _setLoadingTrip(true);
     const respone = await scheduleService.getScheduleByDate(
       1,
@@ -128,24 +128,24 @@ export const Home = ({ navigation }) => {
             await newConnectionLocation.send("StreamGps", _subject);
             setSubject(_subject);
             (async () => {
-              let location = await Location.getCurrentPositionAsync({});
+              let _location = await Location.getCurrentPositionAsync({});
               const coordinates = {
-                Latitude: location.coords.latitude,
-                Longitude: location.coords.longitude,
+                Latitude: _location.coords.latitude,
+                Longitude: _location.coords.longitude,
               };
               _subject.next(coordinates);
             })();
             myInterval = setInterval(async () => {
-              let location = await Location.getCurrentPositionAsync({});
+              let _location = await Location.getCurrentPositionAsync({});
               const coordinates = {
-                Latitude: location.coords.latitude,
-                Longitude: location.coords.longitude,
+                Latitude: _location.coords.latitude,
+                Longitude: _location.coords.longitude,
               };
               let regionTmp = {
                 latitudeDelta: 0.01793054891924406,
                 longitudeDelta: 0.009999999999990905,
-                latitude: location.coords.latitude,
-                longitude: location.coords.longitude,
+                latitude: _location.coords.latitude,
+                longitude: _location.coords.longitude,
               };
               setRegion(regionTmp);
               console.log("🚀 ~ Send Location ~ Home");
@@ -184,11 +184,11 @@ export const Home = ({ navigation }) => {
       try {
         await newConnection.invoke("Login");
 
-        newConnection.on("Connected", mess => {
+        newConnection.on("Connected", (mess) => {
           console.log("Connected chat: ", mess);
         });
 
-        newConnection.on("Message", async mess => {
+        newConnection.on("Message", async (mess) => {
           console.log("receive mess");
           const response = await messageRoomsService.getMessageRooms();
           _setLoadMessage(response?.Data);
