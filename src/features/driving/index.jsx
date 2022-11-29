@@ -30,8 +30,8 @@ import SwipeButton from "rn-swipe-button";
 import { HeaderBack, StepDriving } from "../../components";
 import { ActivityIndicator } from "react-native-paper";
 import { styles } from "./style";
-import { bookingSelected } from "../../store";
-import { useRecoilValue, useSetRecoilState } from "recoil";
+import { bookingSelected, currentLocation } from "../../store";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import tripStatusService from "../../services/tripStatus";
 import MapViewDirections from "react-native-maps-directions";
 import scheduleService from "../../services/Schedule";
@@ -65,7 +65,7 @@ export const Driving = ({ navigation }) => {
   const [_openModal, _setOpenModal] = useState(false);
   const [_refresh, _setRefresh] = useState(false);
   const [_refreshingControl, _setRefreshingControl] = useState(false);
-
+  const [location] = useRecoilState(currentLocation);
   const handleStep = () => {
     let result = [];
     let array = [];
@@ -83,7 +83,7 @@ export const Driving = ({ navigation }) => {
     for (const [index, step] of array.entries()) {
       let bookingDetailDriverCode = step.BookingDetailDriverCode;
       let itemFound = _bookingSelected.Schedules.find(
-        item => item.BookingDetailDriverCode === bookingDetailDriverCode
+        (item) => item.BookingDetailDriverCode === bookingDetailDriverCode
       );
       let stationCode = step.StationCode;
       // address and position
@@ -138,101 +138,90 @@ export const Driving = ({ navigation }) => {
     }
   }, [_bookingSelected]);
 
-  const handleSheetChanges = useCallback(index => {
+  const handleSheetChanges = useCallback((index) => {
     // console.log("handleSheetChanges", index);
   }, []);
 
-  const onRegionChange = region => {
+  const onRegionChange = (region) => {
     // console.log(region);
     setRegion({ region });
   };
 
   const handleSwipeSuccess = async () => {
-    let { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert(
-        'Turn on location services to allow "ViGo" to determine your location',
-        "",
-        [{ text: "OK", onPress: () => {} }]
+    _setIsLoadingChangeStep(true);
+    let stepTmp = [..._listStep];
+    // remove step
+    let itemDeleted = stepTmp[0];
+    if (itemDeleted) {
+      let tripStatus;
+      if (itemDeleted.StationPosition === "start") {
+        tripStatus = STATUS_TRIP["PickedUp"];
+      } else {
+        tripStatus = STATUS_TRIP["Completed"];
+      }
+      console.log(itemDeleted.BookingDetailDriverCode, tripStatus);
+      const res = await tripStatusService.updateTripStatus(
+        itemDeleted.BookingDetailDriverCode,
+        tripStatus,
+        location.latitude,
+        location.longitude
       );
-      return;
-    } else {
-      let location = await Location.getCurrentPositionAsync({});
-      _setIsLoadingChangeStep(true);
-      let stepTmp = [..._listStep];
-      // remove step
-      let itemDeleted = stepTmp[0];
-      if (itemDeleted) {
-        let tripStatus;
-        if (itemDeleted.StationPosition === "start") {
-          tripStatus = STATUS_TRIP["PickedUp"];
-        } else {
-          tripStatus = STATUS_TRIP["Completed"];
-        }
-        console.log(itemDeleted.BookingDetailDriverCode, tripStatus);
-        const res = await tripStatusService.updateTripStatus(
-          itemDeleted.BookingDetailDriverCode,
-          tripStatus,
-          location.coords.latitude,
-          location.coords.longitude
-        );
-        console.log(res);
-        if (res.StatusCode === 200) {
-          stepTmp.shift();
-          if (stepTmp.length > 0) {
-            let statusSwipe = {};
-            if (stepTmp[0].StationPosition === "start") {
-              statusSwipe = {
-                text: `Pick up ${stepTmp[0].UserName}`,
-                color: colors.primary,
-              };
-            } else {
-              statusSwipe = {
-                text: `Drop off ${stepTmp[0].UserName}`,
-                color: colors.orange,
-              };
-            }
-            _setStatusSwipe(statusSwipe);
-            _setListStep(stepTmp.length > 0 ? stepTmp : []);
-            handleRefresh();
-            _setIsLoadingChangeStep(false);
-            forceResetLastButton && forceResetLastButton();
-          } else {
-            navigation.navigate("Success");
-            _setStatusSwipe({
-              text: `Finish`,
+      console.log(res);
+      if (res.StatusCode === 200) {
+        stepTmp.shift();
+        if (stepTmp.length > 0) {
+          let statusSwipe = {};
+          if (stepTmp[0].StationPosition === "start") {
+            statusSwipe = {
+              text: `Pick up ${stepTmp[0].UserName}`,
               color: colors.primary,
-            });
-            _setListStep(stepTmp.length > 0 ? stepTmp : []);
-            _setIsLoadingChangeStep(false);
-            forceResetLastButton && forceResetLastButton();
+            };
+          } else {
+            statusSwipe = {
+              text: `Drop off ${stepTmp[0].UserName}`,
+              color: colors.orange,
+            };
           }
-        } else if (
-          res.StatusCode === 500 &&
-          res?.Message.includes("Your location must be within")
-        ) {
-          Alert.alert(
-            "Location is too far",
-            `Your location is too far from the ${
-              res?.Message.includes("start station") ? "pick up" : "drop off"
-            } point, please approach the ${
-              res?.Message.includes("start station") ? "pick up" : "drop off"
-            } point`,
-            [
-              {
-                text: "OK",
-                onPress: () => {
-                  _setIsLoadingChangeStep(false);
-                  forceResetLastButton && forceResetLastButton();
-                },
-              },
-            ]
-          );
-        } else {
+          _setStatusSwipe(statusSwipe);
+          _setListStep(stepTmp.length > 0 ? stepTmp : []);
+          handleRefresh();
           _setIsLoadingChangeStep(false);
           forceResetLastButton && forceResetLastButton();
-          Alert.alert("Error", "Ops! Something went wrong");
+        } else {
+          navigation.navigate("Success");
+          _setStatusSwipe({
+            text: `Finish`,
+            color: colors.primary,
+          });
+          _setListStep(stepTmp.length > 0 ? stepTmp : []);
+          _setIsLoadingChangeStep(false);
+          forceResetLastButton && forceResetLastButton();
         }
+      } else if (
+        res.StatusCode === 500 &&
+        res?.Message.includes("Your location must be within")
+      ) {
+        Alert.alert(
+          "Location is too far",
+          `Your location is too far from the ${
+            res?.Message.includes("start station") ? "pick up" : "drop off"
+          } point, please approach the ${
+            res?.Message.includes("start station") ? "pick up" : "drop off"
+          } point`,
+          [
+            {
+              text: "OK",
+              onPress: () => {
+                _setIsLoadingChangeStep(false);
+                forceResetLastButton && forceResetLastButton();
+              },
+            },
+          ]
+        );
+      } else {
+        _setIsLoadingChangeStep(false);
+        forceResetLastButton && forceResetLastButton();
+        Alert.alert("Error", "Ops! Something went wrong");
       }
     }
   };
@@ -325,8 +314,8 @@ export const Driving = ({ navigation }) => {
                   const res = await tripStatusService.updateTripStatus(
                     _listStep[0].BookingDetailDriverCode,
                     STATUS_TRIP["Completed"],
-                    location.coords.latitude,
-                    location.coords.longitude
+                    location.latitude,
+                    location.longitude
                   );
                   // console.log("🚀 ~ DRIVING ~ ", res);
                   if (res && res.StatusCode === 200) {
@@ -391,7 +380,7 @@ export const Driving = ({ navigation }) => {
         ref={ggmap}
         onMapReady={() =>
           ggmap.current.fitToCoordinates(
-            _bookingSelected.Steps.map(item => {
+            _bookingSelected.Steps.map((item) => {
               return { latitude: item.Latitude, longitude: item.Longitude };
             }),
             {
@@ -435,7 +424,7 @@ export const Driving = ({ navigation }) => {
               _bookingSelected.Steps[_bookingSelected.Steps.length - 1]
                 .Longitude,
           }}
-          // apikey={COMMONS.GOOGLE_MAPS_APIKEY}
+          apikey={COMMONS.GOOGLE_MAPS_APIKEY}
           strokeWidth={5}
           strokeColor={colors.primary}
           waypoints={_wayPoints}
@@ -494,7 +483,7 @@ export const Driving = ({ navigation }) => {
       <View style={styles.boxSwipe}>
         <SwipeButton
           disableResetOnTap
-          forceReset={reset => {
+          forceReset={(reset) => {
             forceResetLastButton = reset;
           }}
           railBackgroundColor={

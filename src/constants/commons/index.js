@@ -3,4 +3,5 @@ export const COMMONS = {
   SOCKET_CHAT: "hubs",
   SOCKET_LOCATION: "gps",
   TIME_SEND_LOCATION: 3000,
+  GOOGLE_MAPS_APIKEY: "",
 };

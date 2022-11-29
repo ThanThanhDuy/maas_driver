@@ -100,7 +100,7 @@ export const Income = ({ navigation }) => {
                     response.Data.forEach((income) => {
                       count += income.Incomes.length;
                       total += income.TotalIncome;
-                      label.push(income.Date);
+                      label.push(getWeekDay(income.Date));
                       data.push(income.TotalIncome);
                     });
                     newIncome.Incomes = response.Data;
@@ -135,7 +135,7 @@ export const Income = ({ navigation }) => {
                     response.Data.forEach((income) => {
                       count += income.Incomes.length;
                       total += income.TotalIncome;
-                      label.push(income.Date);
+                      label.push(getWeekDay(income.Date));
                       data.push(income.TotalIncome);
                     });
                     newIncome.Incomes = response.Data;

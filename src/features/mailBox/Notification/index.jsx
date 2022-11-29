@@ -72,6 +72,7 @@ export const Notification = ({ navigation }) => {
                 source={LOGO.logo}
               />
             }
+            iconRight={<View />}
             key={index}
             label={notification.Title}
             description={`${notification.Content} \n${moment(

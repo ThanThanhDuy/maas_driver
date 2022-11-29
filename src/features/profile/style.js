@@ -5,7 +5,7 @@ export const styles = StyleSheet.create({
   container: {
     // backgroundColor: colors.primary,
     // height: 200,
-    flex: 1,
+    flex: 0,
     borderBottomLeftRadius: 15,
     borderBottomRightRadius: 15,
   },
@@ -125,7 +125,7 @@ export const styles = StyleSheet.create({
   },
   wrapperLogout: {
     width: appTheme.WIDTH,
-    marginTop: 50,
+    marginTop: 40,
     height: 60,
     flexDirection: "row",
     justifyContent: "center",

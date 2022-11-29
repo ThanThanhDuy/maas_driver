@@ -101,7 +101,9 @@ export const Profile = ({ navigation }) => {
 
   return (
     <>
-      <SafeAreaView style={{ flex: 1, position: "relative" }}>
+      <SafeAreaView style={{ flex: 1 }}>
+        <View style={styles.bg}></View>
+
         <ScrollView contentContainerStyle={styles.container}>
           <HeaderBack
             title="Home"
@@ -218,7 +220,6 @@ export const Profile = ({ navigation }) => {
             </TouchableOpacity>
           </View>
         </ScrollView>
-        <View style={styles.bg}></View>
       </SafeAreaView>
     </>
   );

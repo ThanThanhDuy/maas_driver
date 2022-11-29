@@ -49,7 +49,7 @@ export const DriverSetting = ({ navigation }) => {
     _setRefresing(false);
   };
 
-  const handleSelect = item => {
+  const handleSelect = (item) => {
     _setRouteSelected(item);
     navigation.navigate("DetailRoute", {
       fromScreen: "Settings",
@@ -108,7 +108,7 @@ export const DriverSetting = ({ navigation }) => {
                         color={colors.primary}
                       />
                     </View>
-                    <Text numberOfLines={1} style={styles.textAddress}>
+                    <Text numberOfLines={2} style={styles.textAddress}>
                       {item.Stations[0].Name}
                     </Text>
                   </View>
@@ -136,7 +136,7 @@ export const DriverSetting = ({ navigation }) => {
                       />
                     </View>
 
-                    <Text style={styles.textAddress} numberOfLines={1}>
+                    <Text style={styles.textAddress} numberOfLines={2}>
                       {item.Stations[item.Stations.length - 1].Name}
                     </Text>
                   </View>
