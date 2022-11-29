@@ -22,6 +22,7 @@ import { ActivityIndicator } from "react-native-paper";
 
 import {
   bookingSelected,
+  currentLocation,
   isUserWorking,
   loadMessageState,
   subjectState,
@@ -53,6 +54,7 @@ export const Home = ({ navigation }) => {
   const _setIsUserWorking = useSetRecoilState(isUserWorking);
   const isUserWorkingState = useRecoilValue(isUserWorking);
   const isFocused = useIsFocused();
+  const [location, setLocation] = useRecoilState(currentLocation);
 
   useEffect(() => {
     (async () => {
@@ -65,8 +67,8 @@ export const Home = ({ navigation }) => {
         let regionTmp = {
           latitudeDelta: 0.01793054891924406,
           longitudeDelta: 0.009999999999990905,
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
+          latitude: location.latitude,
+          longitude: location.longitude,
         };
         setRegion(regionTmp);
       }
@@ -106,6 +108,7 @@ export const Home = ({ navigation }) => {
     const res = await userService.getProfile();
     if (res && res.StatusCode === 200) {
       _setUser(res.Data);
+      console.log(_user);
       await AsyncStorage.setItem("User", JSON.stringify(res?.Data));
     }
   };
@@ -147,6 +150,7 @@ export const Home = ({ navigation }) => {
                 latitude: _location.coords.latitude,
                 longitude: _location.coords.longitude,
               };
+              setLocation(regionTmp);
               setRegion(regionTmp);
               console.log("🚀 ~ Send Location ~ Home");
               _subject.next(coordinates);
@@ -283,20 +287,14 @@ export const Home = ({ navigation }) => {
         ) : (
           <View style={[styles.boxRating, { justifyContent: "space-between" }]}>
             <StarRating
-              rating={3.5}
+              rating={_user?.Rating}
               onChange={() => {}}
               maxStars={5}
               style={{ marginTop: 2 }}
               starStyle={{ marginRight: -7 }}
             />
-            <Text
-              style={{ fontFamily: "Roboto_500", fontSize: fontSize.medium }}
-            >
-              3.5/5
-            </Text>
           </View>
         )}
-
         <View style={{ alignItems: "flex-end", justifyContent: "center" }}>
           <Text style={styles.textWallet}>Account ViWallet</Text>
           <View style={{ flexDirection: "row" }}>

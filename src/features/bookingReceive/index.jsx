@@ -72,7 +72,7 @@ export const BookingReceive = ({ navigation }) => {
     setTimeout(() => {
       loading && _setRefreshing(false);
     }, 1000);
-    if (minutes <= 60 && minutes > 0) {
+    if (minutes <= 60 && minutes > -5) {
       _setStartButton(true);
     }
     if (day <= _dayBeforeApproveCancel * -1) {
@@ -136,7 +136,7 @@ export const BookingReceive = ({ navigation }) => {
     _setRadioButtonsSelected(index);
   }
 
-  const callNumber = phone => {
+  const callNumber = (phone) => {
     if (phone) {
       let phoneNumber = `tel:${phone}`;
       Linking.openURL(phoneNumber);
@@ -178,7 +178,7 @@ export const BookingReceive = ({ navigation }) => {
           _setLoadingCancel(true);
           handleClose();
           const listBookingDetailDriverCode = _bookingSelected.Schedules.map(
-            item => item.BookingDetailDriverCode
+            (item) => item.BookingDetailDriverCode
           );
           const reason =
             _radioButtonsSelected === REASON.length - 1
@@ -248,7 +248,7 @@ export const BookingReceive = ({ navigation }) => {
           _bookingSelected.Schedules[0].TripStatus === STATUS_TRIP["NotYet"]
         ) {
           const listCode = _bookingSelected.Schedules.map(
-            item => item.BookingDetailDriverCode
+            (item) => item.BookingDetailDriverCode
           );
           const response = await tripStatusService.startTrip(listCode);
           console.log(response);

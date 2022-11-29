@@ -97,7 +97,7 @@ function createStyle() {
       shadowRadius: 15,
       elevation: 0,
       height: 60,
-      width: appTheme.WIDTH - 150,
+      width: appTheme.WIDTH - 200,
       borderRadius: 15,
       marginTop: 10,
       alignItems: "center",

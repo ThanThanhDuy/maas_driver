@@ -117,6 +117,7 @@ export const styles = StyleSheet.create({
     alignItems: "center",
   },
   textAddress: {
+    width: "80%",
     marginLeft: 10,
     fontFamily: "Roboto_400",
     fontSize: fontSize.regular,

@@ -7,7 +7,7 @@ import { styles } from "./style";
 const Actions = [
   {
     icon: <Ionicons name="mail" size={32} color="white" />,
-    title: "Notification",
+    title: "Notifications",
     color: colors.organeV2,
     page: "Notification",
   },

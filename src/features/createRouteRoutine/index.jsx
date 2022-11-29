@@ -370,7 +370,7 @@ export const CreateRouteRoutine = ({ navigation }) => {
                                     />
                                   </View>
                                   <Text
-                                    numberOfLines={1}
+                                    numberOfLines={2}
                                     style={styles.textAddress}
                                   >
                                     {item.Stations[0].Name}
@@ -402,7 +402,7 @@ export const CreateRouteRoutine = ({ navigation }) => {
 
                                   <Text
                                     style={styles.textAddress}
-                                    numberOfLines={1}
+                                    numberOfLines={2}
                                   >
                                     {
                                       item.Stations[item.Stations.length - 1]
