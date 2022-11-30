@@ -63,12 +63,12 @@ export const Home = ({ navigation }) => {
         console.log("denied");
         return;
       } else {
-        let location = await Location.getCurrentPositionAsync({});
+        let locationTmp = await Location.getCurrentPositionAsync({});
         let regionTmp = {
           latitudeDelta: 0.01793054891924406,
           longitudeDelta: 0.009999999999990905,
-          latitude: location.latitude,
-          longitude: location.longitude,
+          latitude: locationTmp.coords.latitude,
+          longitude: locationTmp.coords.longitude,
         };
         setRegion(regionTmp);
       }
@@ -108,7 +108,7 @@ export const Home = ({ navigation }) => {
     const res = await userService.getProfile();
     if (res && res.StatusCode === 200) {
       _setUser(res.Data);
-      console.log(_user);
+      // console.log(_user)
       await AsyncStorage.setItem("User", JSON.stringify(res?.Data));
     }
   };
