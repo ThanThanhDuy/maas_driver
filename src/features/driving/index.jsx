@@ -65,6 +65,7 @@ export const Driving = ({ navigation }) => {
   const [_openModal, _setOpenModal] = useState(false);
   const [_refresh, _setRefresh] = useState(false);
   const [_refreshingControl, _setRefreshingControl] = useState(false);
+  const [_loadingConfirm, _setLoadingConfirm] = useState(false);
   const [location] = useRecoilState(currentLocation);
   const handleStep = () => {
     let result = [];
@@ -297,52 +298,42 @@ export const Driving = ({ navigation }) => {
           {
             text: "Yes",
             onPress: async () => {
+              _setLoadingConfirm(true);
               if (_radioButtonsSelected === 0) {
-                let { status } =
-                  await Location.requestForegroundPermissionsAsync();
-                if (status !== "granted") {
+                const res = await tripStatusService.updateTripStatus(
+                  _listStep[0].BookingDetailDriverCode,
+                  STATUS_TRIP["Completed"],
+                  location.latitude,
+                  location.longitude
+                );
+                // console.log("🚀 ~ DRIVING ~ ", res);
+                if (res && res.StatusCode === 200) {
+                  const result = await handleRefresh();
+                  if (!result) {
+                    navigation.navigate("Success");
+                    _setStatusSwipe({
+                      text: `Finish`,
+                      color: colors.primary,
+                    });
+                    _setListStep([]);
+                    _setIsLoadingChangeStep(false);
+                    forceResetLastButton && forceResetLastButton();
+                    handleClose();
+                  }
+                  _setLoadingConfirm(false);
+                } else if (
+                  res.StatusCode === 500 &&
+                  res?.Message.includes("Your location must be within")
+                ) {
+                  _setLoadingConfirm(false);
                   Alert.alert(
-                    'Turn on location services to allow "ViGo" to determine your location',
-                    "",
+                    "Location is too far",
+                    "Your location is too far from the pick up point, please approach the pick up point",
                     [{ text: "OK", onPress: () => {} }]
                   );
-                  return;
-                } else {
-                  let location = await Location.getCurrentPositionAsync({});
-                  // console.log(_listStep[0]);
-                  // complete when customer don't arrive
-                  const res = await tripStatusService.updateTripStatus(
-                    _listStep[0].BookingDetailDriverCode,
-                    STATUS_TRIP["Completed"],
-                    location.latitude,
-                    location.longitude
-                  );
-                  // console.log("🚀 ~ DRIVING ~ ", res);
-                  if (res && res.StatusCode === 200) {
-                    const result = await handleRefresh();
-                    if (!result) {
-                      navigation.navigate("Success");
-                      _setStatusSwipe({
-                        text: `Finish`,
-                        color: colors.primary,
-                      });
-                      _setListStep([]);
-                      _setIsLoadingChangeStep(false);
-                      forceResetLastButton && forceResetLastButton();
-                      handleClose();
-                    }
-                  } else if (
-                    res.StatusCode === 500 &&
-                    res?.Message.includes("Your location must be within")
-                  ) {
-                    Alert.alert(
-                      "Location is too far",
-                      "Your location is too far from the pick up point, please approach the pick up point",
-                      [{ text: "OK", onPress: () => {} }]
-                    );
-                  }
                 }
               } else {
+                _setLoadingConfirm(false);
                 Alert.alert(
                   "Feature is being updated, please try again later",
                   "",
@@ -578,6 +569,13 @@ export const Driving = ({ navigation }) => {
                 onPress={handleConfirm}
               >
                 <Text style={styles.textConfirm}>Confirm</Text>
+                {_loadingConfirm && (
+                  <ActivityIndicator
+                    style={{ position: "absolute", right: 20 }}
+                    size={24}
+                    color={colors.white}
+                  />
+                )}
               </TouchableOpacity>
             </View>
           </View>
