@@ -21,12 +21,12 @@ export function getCurrentYear() {
 }
 
 export function getWeek() {
-  var curr = new Date();
+  let curr = new Date();
   var firstDayOfWeek = curr.getDate() - curr.getDay() + 1;
   var lastDayOfWeek = firstDayOfWeek + 6;
   return {
-    startAt: new Date(curr.setDate(firstDayOfWeek)),
-    endAt: new Date(curr.setDate(lastDayOfWeek)),
+    startAt: new Date(new Date().setDate(firstDayOfWeek)),
+    endAt: new Date(new Date().setDate(lastDayOfWeek)),
   };
 }
 
