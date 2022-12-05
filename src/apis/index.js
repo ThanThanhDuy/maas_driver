@@ -3,6 +3,7 @@ import axios from "axios";
 import queryString from "query-string";
 import * as RootNavigation from "../navigation/rootNavigation";
 import tokenService from "../services/token";
+import userService from "../services/user";
 //config
 const axiosClient = axios.create({
   baseURL:
@@ -19,6 +20,7 @@ axiosClient.interceptors.request.use(async (config) => {
   if (localAccessToken) {
     const accessToken = JSON.parse(localAccessToken);
     config.headers.Authorization = `Bearer ${accessToken}`;
+    // console.log(`Bearer ${accessToken}`);
   }
   return config;
 });
@@ -32,7 +34,6 @@ axiosClient.interceptors.response.use(
     return response;
   },
   async (error) => {
-    console.log(error.response.data);
     if (error.response.data.StatusCode === 401) {
       const currentScreen =
         RootNavigation.navigationRef.current.getCurrentRoute().name;
@@ -41,25 +42,41 @@ axiosClient.interceptors.response.use(
         if (!originalConfig._retry) {
           originalConfig._retry = true;
           try {
-            console.log("REFRESH TOKEN");
-            const localAccessToken = tokenService.getAccessToken();
-            const localRefreshToken = tokenService.getRefreshToken();
+            // console.log("REFRESH TOKEN");
+            const localAccessToken = await tokenService.getAccessToken();
+            const localRefreshToken = await tokenService.getRefreshToken();
             if (localAccessToken) {
-              const rs = await instance.post("accounts/refresh-token", {
+              const rs = await axiosClient.post("accounts/refresh-token", {
                 AccessToken: localAccessToken,
                 RefreshToken: localRefreshToken,
               });
-
               const { token, refreshToken } = rs.Data;
               tokenService.updateToken(token, refreshToken);
-              return instance(originalConfig);
+              return axiosClient(originalConfig);
             } else {
-              RootNavigation.navigationRef.navigate("Login");
+              RootNavigation.navigationRef.current.navigate("NotAuth", {
+                screen: "Login",
+              });
             }
           } catch (_error) {
+            if (_error.StatusCode === 400) {
+              RootNavigation.navigationRef.current.navigate("NotAuth", {
+                screen: "Login",
+              });
+            }
             throw _error;
           }
         }
+      }
+    } else if (error.response.data.StatusCode === 403) {
+      const currentScreen =
+        RootNavigation.navigationRef.current.getCurrentRoute().name;
+      if (currentScreen !== "Login") {
+        tokenService.removeToken();
+        userService.removeUser();
+        RootNavigation.navigationRef.current.navigate("NotAuth", {
+          screen: "Login",
+        });
       } else {
         throw error.response.data;
       }

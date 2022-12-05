@@ -44,6 +44,10 @@ export const Profile = ({ navigation }) => {
   const subject = useRecoilValue(subjectState);
 
   const _loadProfile = async () => {
+    const user = await userService.getUser();
+    if (user) {
+      _setUser(user);
+    }
     const res = await userService.getProfile();
     if (res && res.StatusCode === 200) {
       _setUser(res.Data);
@@ -73,13 +77,13 @@ export const Profile = ({ navigation }) => {
             _setLoading(true);
             const res = await userService.logout();
             if (res && res.StatusCode === 200) {
-              if (isUserWorkingState) {
-                setIsUserWorking(false);
-                subject?.complete();
-                clearInterval(myInterval); // myInterval from home screen when working (send location)
-                console.log("🚀 ~ Interval ~ Loug out", myInterval);
-              }
-              await newConnection.invoke("Logout"); // newConnection from home screen (chat)
+              // if (isUserWorkingState) {
+              //   subject?.complete()
+              //   clearInterval(myInterval) // myInterval from home screen when working (send location)
+              //   console.log("🚀 ~ Interval ~ Loug out", myInterval)
+              // }
+              // await newConnection.invoke("Logout") // newConnection from home screen (chat)
+              setIsUserWorking(false);
               tokenService.removeToken();
               userService.removeUser();
               setTimeout(() => {

@@ -57,7 +57,7 @@ export const BookingReceive = ({ navigation }) => {
   const isFocused = useIsFocused();
   const _setBookingSelected = useSetRecoilState(bookingSelected);
 
-  const compareTimeStart = (
+  const compareTimeStart = async (
     _dayBeforeApproveCancel,
     _timeBeforeApproveCancel,
     loading = true
@@ -72,7 +72,17 @@ export const BookingReceive = ({ navigation }) => {
     setTimeout(() => {
       loading && _setRefreshing(false);
     }, 1000);
-    if (minutes <= 60 && minutes > -5) {
+    const user = await userService.getUser();
+    const TimeAfterToStartTrip = user.Settings.find(
+      (item) => item.Key === "TimeAfterToStartTrip"
+    );
+    const TimeBeforeToStartTrip = user.Settings.find(
+      (item) => item.Key === "TimeBeforeToStartTrip"
+    );
+    if (
+      minutes <= Number(TimeBeforeToStartTrip?.Value) &&
+      minutes > Number(TimeAfterToStartTrip?.Value) * -1
+    ) {
       _setStartButton(true);
     }
     if (day <= _dayBeforeApproveCancel * -1) {
@@ -86,7 +96,7 @@ export const BookingReceive = ({ navigation }) => {
         // check time to cancel
         if (minutes <= 0) {
           _setCanCancel(false);
-          return "You only can cancel before 19:30";
+          return `You only can cancel before ${_timeBeforeApproveCancel}`;
         } else {
           _setCanCancel(true);
         }
@@ -95,34 +105,43 @@ export const BookingReceive = ({ navigation }) => {
         _setCanCancel(true);
       }
     } else {
-      return "You only can cancel before 1 day";
+      return "you can only cancel your schedule from tomorrow";
     }
   };
 
   useEffect(() => {
     const handleLoad = async () => {
-      const respone = await scheduleService.getScheduleByDate(
+      const response = await scheduleService.getScheduleByDate(
         1,
         1,
         _bookingSelected.Date,
         _bookingSelected.Date
       );
-      if (respone.StatusCode === 200 && respone.Data) {
-        for (const item of respone.Data.Items[0].RouteRoutines) {
+      if (response.StatusCode === 200 && response.Data) {
+        for (const item of response.Data.Items[0].RouteRoutines) {
           if (item.StartTime === _bookingSelected.StartTime) {
             _setBookingSelected({
               ...item,
-              Date: respone.Data.Items[0].Date,
+              Date: response.Data.Items[0].Date,
             });
           }
         }
       }
     };
     handleLoad();
-    compareTimeStart(
-      TIME_CANCEL_ROUTE.DAY_BEFORE_TO_CAN_CANCEL,
-      TIME_CANCEL_ROUTE.END_TIME_TO_CANCEL
-    );
+    const handleTime = async () => {
+      const user = await userService.getUser();
+      const AllowedDriverCancelTripTime = user.Settings.find(
+        (item) => item.Key === "AllowedDriverCancelTripTime"
+      );
+      compareTimeStart(
+        TIME_CANCEL_ROUTE.DAY_BEFORE_TO_CAN_CANCEL,
+        AllowedDriverCancelTripTime?.Value
+          ? AllowedDriverCancelTripTime?.Value
+          : TIME_CANCEL_ROUTE.END_TIME_TO_CANCEL
+      );
+    };
+    handleTime();
     const handleGetUser = async () => {
       const user = await userService.getUser();
       if (user) {
@@ -143,7 +162,7 @@ export const BookingReceive = ({ navigation }) => {
     }
   };
 
-  const handleCancel = () => {
+  const handleCancel = async () => {
     if (_canCancel) {
       _setOpenModal(true);
       Animated.timing(modalMotion, {
@@ -152,9 +171,15 @@ export const BookingReceive = ({ navigation }) => {
         useNativeDriver: false,
       }).start();
     } else {
+      const user = await userService.getUser();
+      const AllowedDriverCancelTripTime = user.Settings.find(
+        (item) => item.Key === "AllowedDriverCancelTripTime"
+      );
       const result = compareTimeStart(
         TIME_CANCEL_ROUTE.DAY_BEFORE_TO_CAN_CANCEL,
-        TIME_CANCEL_ROUTE.END_TIME_TO_CANCEL,
+        AllowedDriverCancelTripTime?.Value
+          ? AllowedDriverCancelTripTime?.Value
+          : TIME_CANCEL_ROUTE.END_TIME_TO_CANCEL,
         false
       );
       if (result) {
@@ -212,41 +237,90 @@ export const BookingReceive = ({ navigation }) => {
     ]);
   };
 
-  const onRefresh = () => {
+  const onRefresh = async () => {
     const handleLoad = async () => {
-      const respone = await scheduleService.getScheduleByDate(
+      const response = await scheduleService.getScheduleByDate(
         1,
         1,
         _bookingSelected.Date,
         _bookingSelected.Date
       );
-      if (respone.StatusCode === 200 && respone.Data) {
-        for (const item of respone.Data.Items[0].RouteRoutines) {
+      if (response.StatusCode === 200 && response.Data) {
+        for (const item of response.Data.Items[0].RouteRoutines) {
           if (item.StartTime === _bookingSelected.StartTime) {
             _setBookingSelected({
               ...item,
-              Date: respone.Data.Items[0].Date,
+              Date: response.Data.Items[0].Date,
             });
           }
         }
       }
     };
     handleLoad();
+    const user = await userService.getUser();
+    const AllowedDriverCancelTripTime = user.Settings.find(
+      (item) => item.Key === "AllowedDriverCancelTripTime"
+    );
     compareTimeStart(
       TIME_CANCEL_ROUTE.DAY_BEFORE_TO_CAN_CANCEL,
-      TIME_CANCEL_ROUTE.END_TIME_TO_CANCEL
+      AllowedDriverCancelTripTime?.Value
+        ? AllowedDriverCancelTripTime?.Value
+        : TIME_CANCEL_ROUTE.END_TIME_TO_CANCEL
     );
   };
 
   const handleStart = async () => {
-    // check working status driver
-    console.log(_startButton);
-    if (_startButton) {
-      // check time to start
-      if (isUserWorkingState) {
-        if (
-          _bookingSelected.Schedules[0].TripStatus === STATUS_TRIP["NotYet"]
-        ) {
+    // // check working status driver
+    // if (_bookingSelected.Schedules[0].TripStatus === STATUS_TRIP["NotYet"]) {
+    //   if (_startButton) {
+    //     // check time to start
+    //     if (isUserWorkingState) {
+    //       if (
+    //         _bookingSelected.Schedules[0].TripStatus === STATUS_TRIP["NotYet"]
+    //       ) {
+    //         const listCode = _bookingSelected.Schedules.map(
+    //           item => item.BookingDetailDriverCode
+    //         );
+    //         const response = await tripStatusService.startTrip(listCode);
+    //         console.log(response);
+    //         if (response && response.StatusCode === 200) {
+    //           navigation.navigate("Driving");
+    //         } else {
+    //           Alert.alert("Can't start trip", "Something went wrong", [
+    //             { text: "OK", onPress: () => {} },
+    //           ]);
+    //         }
+    //       } else {
+    //         navigation.navigate("Driving");
+    //       }
+    //     } else {
+    //       Alert.alert("Can't start trip", "Please turn on the active status", [
+    //         {
+    //           text: "Back Home",
+    //           onPress: () => navigation.navigate("Home"),
+    //         },
+    //         { text: "OK", onPress: () => {} },
+    //       ]);
+    //     }
+    //   } else {
+    //     Alert.alert(
+    //       "Can't start trip",
+    //       "It's not time to start, please come back later",
+    //       [{ text: "OK", onPress: () => {} }]
+    //     );
+    //   }
+    // } else {
+    //   navigation.navigate("Driving");
+    // }
+    // ? _startButton && isUserWorkingState
+    //                       ? colors.primary
+    //                       : "#ccc"
+    //                     : isUserWorkingState
+    //                     ? colors.primary
+    //                     : "#ccc",
+    if (_bookingSelected.Schedules[0].TripStatus === STATUS_TRIP["NotYet"]) {
+      if (_startButton) {
+        if (isUserWorkingState) {
           const listCode = _bookingSelected.Schedules.map(
             (item) => item.BookingDetailDriverCode
           );
@@ -255,13 +329,29 @@ export const BookingReceive = ({ navigation }) => {
           if (response && response.StatusCode === 200) {
             navigation.navigate("Driving");
           } else {
-            Alert.alert("Can't start trip", "Something went wrong", [
+            Alert.alert("Can't start trip", response?.Message, [
               { text: "OK", onPress: () => {} },
             ]);
           }
         } else {
-          navigation.navigate("Driving");
+          Alert.alert("Can't start trip", "Please turn on the active status", [
+            {
+              text: "Back Home",
+              onPress: () => navigation.navigate("Home"),
+            },
+            { text: "OK", onPress: () => {} },
+          ]);
         }
+      } else {
+        Alert.alert(
+          "Can't start trip",
+          "It's not time to start, please come back later",
+          [{ text: "OK", onPress: () => {} }]
+        );
+      }
+    } else {
+      if (isUserWorkingState) {
+        navigation.navigate("Driving");
       } else {
         Alert.alert("Can't start trip", "Please turn on the active status", [
           {
@@ -271,12 +361,6 @@ export const BookingReceive = ({ navigation }) => {
           { text: "OK", onPress: () => {} },
         ]);
       }
-    } else {
-      Alert.alert(
-        "Can't start trip",
-        "It's not time to start, please come back later",
-        [{ text: "OK", onPress: () => {} }]
-      );
     }
   };
 
@@ -366,7 +450,12 @@ export const BookingReceive = ({ navigation }) => {
                   styles.boxStart,
                   {
                     backgroundColor:
-                      _startButton && isUserWorkingState
+                      _bookingSelected.Schedules[0].TripStatus ===
+                      STATUS_TRIP["NotYet"]
+                        ? _startButton && isUserWorkingState
+                          ? colors.primary
+                          : "#ccc"
+                        : isUserWorkingState
                         ? colors.primary
                         : "#ccc",
                   },

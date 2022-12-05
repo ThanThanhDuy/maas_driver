@@ -7,7 +7,7 @@ class UserService {
     const params = {
       FCMToken: await checkToken(),
     };
-    console.log(params);
+    // console.log(params);
     try {
       var response = await userApi.getProfile(params);
     } catch (error) {
