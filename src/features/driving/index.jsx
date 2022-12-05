@@ -35,6 +35,7 @@ import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import tripStatusService from "../../services/tripStatus";
 import MapViewDirections from "react-native-maps-directions";
 import scheduleService from "../../services/Schedule";
+import userService from "../../services/user";
 import { COMMONS } from "../../constants";
 import { STATUS_TRIP } from "../../constants/status";
 import { REASON_HELP } from "../../constants/reasonHelp";
@@ -42,6 +43,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { ArrowButton } from "../../components/commons/ArrowButton";
 import * as Location from "expo-location";
 import { ICONS } from "../../assets";
+import moment from "moment";
+import { compareTime } from "../../utils/compareTime";
 
 export const Driving = ({ navigation }) => {
   const _bookingSelected = useRecoilValue(bookingSelected);
@@ -160,7 +163,29 @@ export const Driving = ({ navigation }) => {
       } else {
         tripStatus = STATUS_TRIP["Completed"];
       }
-      console.log(itemDeleted.BookingDetailDriverCode, tripStatus);
+      if (_listStep.length === _bookingSelected.Steps.length) {
+        if (tripStatus === STATUS_TRIP["PickedUp"]) {
+          const user = await userService.getUser();
+          const TimeBeforeToPickUp = user.Settings.find(
+            (item) => item.Key === "TimeBeforeToPickUp"
+          );
+          const minutes = compareTime(_bookingSelected.Date, itemDeleted.Time);
+          if (minutes > Number(TimeBeforeToPickUp?.Value)) {
+            Alert.alert(
+              "Pick up",
+              `It's not time to pick up, You only can pick up after ${moment(
+                itemDeleted.Time,
+                "HH:mm:ss"
+              )
+                .subtract(Number(TimeBeforeToPickUp?.Value), "minutes")
+                .format("HH:mm:ss")}`,
+              [{ text: "OK", onPress: () => {} }]
+            );
+            return;
+          }
+        }
+      }
+      // console.log(itemDeleted.BookingDetailDriverCode, tripStatus);
       const res = await tripStatusService.updateTripStatus(
         itemDeleted.BookingDetailDriverCode,
         tripStatus,
@@ -222,7 +247,7 @@ export const Driving = ({ navigation }) => {
       } else {
         _setIsLoadingChangeStep(false);
         forceResetLastButton && forceResetLastButton();
-        Alert.alert("Error", "Ops! Something went wrong");
+        Alert.alert("Error", `Ops! ${res?.Message}`);
       }
     }
   };
@@ -239,7 +264,7 @@ export const Driving = ({ navigation }) => {
       _bookingSelected.Date,
       _bookingSelected.Date
     );
-    if (respone.StatusCode === 200 && respone.Data) {
+    if (respone?.StatusCode === 200 && respone.Data) {
       for (const item of respone.Data.Items[0].RouteRoutines) {
         if (item.StartTime === _bookingSelected.StartTime) {
           _setBookingSelected({

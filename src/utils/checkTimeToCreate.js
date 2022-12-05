@@ -4,8 +4,16 @@ import { TIME_CREATE_ROUTE } from "../constants/timeCreateRoute";
 import { getCurrentMonth, getCurrentYear } from "./getDate";
 
 // check hom nay co phai nam trong so tuan cuoi da quy dinh hay khong
-export const checkTimeLastPreviousWeek = () => {
-  if (TIME_CREATE_ROUTE.WEEK_BEFORE_NEXT_MONTH !== 0) {
+export const checkTimeLastPreviousWeek = async () => {
+  const user = await userService.getUser();
+  const LastDayNumberForNextMonthRoutine = user.Settings.find(
+    (item) => item.Key === "LastDayNumberForNextMonthRoutine"
+  );
+  if (
+    LastDayNumberForNextMonthRoutine?.Value
+      ? LastDayNumberForNextMonthRoutine?.Value
+      : TIME_CREATE_ROUTE.DAY_BEFORE_NEXT_MONTH !== 0
+  ) {
     let currentMonth =
       getCurrentMonth() === "12"
         ? "01"
@@ -22,7 +30,12 @@ export const checkTimeLastPreviousWeek = () => {
     const timeStartAdd = moment(
       moment(`01-${currentMonth}-${currentYear}`, FORMAT.DATE)
     )
-      .subtract(TIME_CREATE_ROUTE.WEEK_BEFORE_NEXT_MONTH * 7, "days")
+      .subtract(
+        LastDayNumberForNextMonthRoutine?.Value
+          ? LastDayNumberForNextMonthRoutine?.Value
+          : TIME_CREATE_ROUTE.DAY_BEFORE_NEXT_MONTH,
+        "days"
+      )
       .format(FORMAT.DATE);
     const timeEndAdd = moment(
       moment(`01-${currentMonth}-${currentYear}`, FORMAT.DATE)

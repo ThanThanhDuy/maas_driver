@@ -19,7 +19,6 @@ export const checkToken = async () => {
 };
 
 export const notificationListener = () => {
-  console.log("khoaoiw");
   messaging().onNotificationOpenedApp((remoteMessage) => {
     console.log(
       "Notification caused app to open from background state:",

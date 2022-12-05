@@ -26,11 +26,38 @@ export const Schedule = ({ navigation }) => {
   const _setTabSelected = useSetRecoilState(tabSelected);
   const [_refreshing, _setRefreshing] = useState(false);
   const [_haveData, _setHaveData] = useState(true);
+  const [_checkOneLoadMore, _setCheckOneLoadMore] = useState(true);
   const [showToastCancelState, setShowToastCancelState] =
     useRecoilState(showToastCancel);
 
   useEffect(() => {
     const getSchedule = async () => {
+      _setRefreshing(true);
+      _setCheckChangeTime(false);
+      const respone = await scheduleService.getScheduleByDate(
+        1,
+        5,
+        moment(_dateFrom).format(FORMAT.DATE),
+        moment(_dateTo).format(FORMAT.DATE)
+      );
+      if (respone.Data && respone.Data.Items && respone.Data.Items.length > 0) {
+        _setListSchedule([]);
+        _setListSchedule(respone?.Data.Items);
+        _setTotalCountPage(respone?.Data.TotalPagesCount);
+        _setHaveData(true);
+      } else {
+        _setHaveData(false);
+      }
+      _setRefreshing(false);
+      _setIsLoading(false);
+      _setPage(1);
+    };
+    getSchedule();
+  }, [isFocused]);
+
+  useEffect(() => {
+    const getSchedule = async () => {
+      console.log(_page);
       if (_page <= _totalCountPage && _checkChangeTime) {
         _setIsLoading(true);
         const respone = await scheduleService.getScheduleByDate(
@@ -57,34 +84,10 @@ export const Schedule = ({ navigation }) => {
           _setHaveData(false);
         }
       }
+      _setCheckOneLoadMore(true);
     };
     getSchedule();
   }, [_page]);
-
-  useEffect(() => {
-    const getSchedule = async () => {
-      _setRefreshing(true);
-      _setCheckChangeTime(false);
-      const respone = await scheduleService.getScheduleByDate(
-        1,
-        5,
-        moment(_dateFrom).format(FORMAT.DATE),
-        moment(_dateTo).format(FORMAT.DATE)
-      );
-      if (respone.Data && respone.Data.Items && respone.Data.Items.length > 0) {
-        _setListSchedule([]);
-        _setListSchedule(respone?.Data.Items);
-        _setTotalCountPage(respone?.Data.TotalPagesCount);
-        _setHaveData(true);
-      } else {
-        _setHaveData(false);
-      }
-      _setRefreshing(false);
-      _setIsLoading(false);
-      _setPage(1);
-    };
-    getSchedule();
-  }, [isFocused]);
 
   useEffect(() => {
     isFocused && _setTabSelected("Schedule");
@@ -117,8 +120,11 @@ export const Schedule = ({ navigation }) => {
   }, [_dateFrom, _dateTo]);
 
   const handleLoadMore = () => {
-    _setCheckChangeTime(true);
-    _setPage(_page + 1);
+    if (_checkOneLoadMore) {
+      _setCheckChangeTime(true);
+      _setPage(_page + 1);
+      _setCheckOneLoadMore(false);
+    }
   };
 
   const onRefresh = async () => {
@@ -164,7 +170,7 @@ export const Schedule = ({ navigation }) => {
           label="From"
           mode="date"
           date={_dateFrom}
-          onDoneValue={date => {
+          onDoneValue={(date) => {
             if (moment(date).isSameOrAfter(moment(_dateTo), "day")) {
               _setDateTo(moment(date).add(14, "days").toDate());
             }
@@ -179,7 +185,7 @@ export const Schedule = ({ navigation }) => {
           label="To"
           mode="date"
           date={_dateTo}
-          onDoneValue={date => {
+          onDoneValue={(date) => {
             _setDateTo(date);
           }}
           IconFront={

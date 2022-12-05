@@ -86,7 +86,7 @@ export const Home = ({ navigation }) => {
       moment(new Date()).format(FORMAT.DATE),
       moment(new Date()).format(FORMAT.DATE)
     );
-    if (respone.StatusCode === 200) {
+    if (respone?.StatusCode === 200) {
       if (respone?.Data?.Items[0]?.RouteRoutines.length > 0) {
         _setNextTrip(respone.Data.Items[0].RouteRoutines[0]);
       } else {
@@ -101,11 +101,21 @@ export const Home = ({ navigation }) => {
     if (isUserWorkingState) {
       _setIsWorking(isUserWorkingState);
     }
+    if (location?.latitude) {
+      let regionTmp = {
+        latitudeDelta: 0.01793054891924406,
+        longitudeDelta: 0.009999999999990905,
+        latitude: location?.latitude,
+        longitude: location?.longitude,
+      };
+      setRegion(regionTmp);
+    }
     _loadProfile();
   }, [isFocused]);
 
   const _loadProfile = async () => {
     const res = await userService.getProfile();
+    console.log(res);
     if (res && res.StatusCode === 200) {
       _setUser(res.Data);
       // console.log(_user)

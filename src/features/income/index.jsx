@@ -39,7 +39,7 @@ export const Income = ({ navigation }) => {
     let total = 0;
     let label = [];
     let data = [];
-    response.Data.forEach((income) => {
+    response.Data?.forEach((income) => {
       count += income.Incomes.length;
       total += income.TotalIncome;
       label.push(getWeekDay(income.Date));
@@ -185,7 +185,7 @@ export const Income = ({ navigation }) => {
             <Text style={styles.wrappComplete}>
               {income.Count} journey completed
             </Text>
-            {income.Incomes.map((item, index) => {
+            {income?.Incomes?.map((item, index) => {
               if (item.TotalIncome !== 0)
                 return (
                   <JourneyTab

@@ -36,6 +36,7 @@ import SegmentedControl from "@react-native-segmented-control/segmented-control"
 import { compareTimeTodayBeforeTimeCo } from "../../utils/compareTime";
 import { TIME_CREATE_ROUTE } from "../../constants/timeCreateRoute";
 import { getCurrentMonth, getCurrentYear } from "../../utils/getDate";
+import userService from "../../services/user";
 
 const labels = ["Choose route", "Setting"];
 const customStyles = {
@@ -117,10 +118,17 @@ export const CreateRouteRoutine = ({ navigation }) => {
     }, 1000);
   };
 
-  const handleThisMonth = () => {
-    const checkTimeBeforeLimit = compareTimeTodayBeforeTimeCo(
-      TIME_CREATE_ROUTE.END_TIME_TO_ADD_ROUTE
+  const handleThisMonth = async () => {
+    const user = await userService.getUser();
+    const TimeToCreateTomorrowRoutine = user.Settings.find(
+      (item) => item.Key === "TimeToCreateTomorrowRoutine"
     );
+    const checkTimeBeforeLimit = compareTimeTodayBeforeTimeCo(
+      TimeToCreateTomorrowRoutine?.Value
+        ? TimeToCreateTomorrowRoutine?.Value
+        : TIME_CREATE_ROUTE.END_TIME_TO_ADD_ROUTE
+    );
+    console.log(checkTimeBeforeLimit);
     if (checkTimeBeforeLimit) {
       _setDateFrom(moment(new Date()).add(1, "days").toDate());
       let dateTo = moment(new Date()).add(7, "days").toDate();
@@ -281,8 +289,6 @@ export const CreateRouteRoutine = ({ navigation }) => {
       }
     }
   };
-  console.log("ss");
-  console.log(new Date(moment(new Date(), "MM/DD/YYYY").add(1, "days")));
   return (
     <View style={styles.container}>
       <KeyboardAvoidingView
