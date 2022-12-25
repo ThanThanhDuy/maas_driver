@@ -26,6 +26,7 @@ export const Dropdown = props => {
     mode = "normal",
     styleBox = {},
     minimumDate = new Date(),
+    maximumDate,
     date = new Date(),
   } = props;
 
@@ -140,6 +141,7 @@ export const Dropdown = props => {
                   _setOpen(false);
                 }}
                 minimumDate={minimumDate}
+                maximumDate={maximumDate ? maximumDate : null}
               />
             </>
           )}

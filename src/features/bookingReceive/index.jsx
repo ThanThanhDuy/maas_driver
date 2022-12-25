@@ -38,6 +38,7 @@ import { REASON } from "../../constants/reason";
 import { ActivityIndicator } from "react-native-paper";
 import { useIsFocused } from "@react-navigation/native";
 import scheduleService from "../../services/Schedule";
+import { TIME_CANCEL_ROUTE } from "../../constants/timeCreateRoute";
 
 export const BookingReceive = ({ navigation }) => {
   const _bookingSelected = useRecoilValue(bookingSelected);
@@ -97,8 +98,6 @@ export const BookingReceive = ({ navigation }) => {
   };
 
   useEffect(() => {
-    const day = 1;
-    const time = "19:30:00";
     const handleLoad = async () => {
       const respone = await scheduleService.getScheduleByDate(
         1,
@@ -122,7 +121,10 @@ export const BookingReceive = ({ navigation }) => {
       }
     };
     handleLoad();
-    compareTimeStart(day, time);
+    compareTimeStart(
+      TIME_CANCEL_ROUTE.DAY_BEFORE_TO_CAN_CANCEL,
+      TIME_CANCEL_ROUTE.END_TIME_TO_CANCEL
+    );
   }, [isFocused]);
 
   function onPressRadioButton(index) {
@@ -145,9 +147,11 @@ export const BookingReceive = ({ navigation }) => {
         useNativeDriver: false,
       }).start();
     } else {
-      const day = 1;
-      const time = "19:30:00";
-      const result = compareTimeStart(day, time, false);
+      const result = compareTimeStart(
+        TIME_CANCEL_ROUTE.DAY_BEFORE_TO_CAN_CANCEL,
+        TIME_CANCEL_ROUTE.END_TIME_TO_CANCEL,
+        false
+      );
       if (result) {
         Alert.alert("Can't cancel trip", result, [
           { text: "OK", onPress: () => {} },
@@ -204,9 +208,10 @@ export const BookingReceive = ({ navigation }) => {
   };
 
   const onRefresh = () => {
-    const day = 1;
-    const time = "19:30:00";
-    compareTimeStart(day, time);
+    compareTimeStart(
+      TIME_CANCEL_ROUTE.DAY_BEFORE_TO_CAN_CANCEL,
+      TIME_CANCEL_ROUTE.END_TIME_TO_CANCEL
+    );
   };
 
   const handleStart = async () => {
